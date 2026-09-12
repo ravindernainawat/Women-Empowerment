@@ -1,0 +1,98 @@
+erDiagram
+    USERS ||--o{ USER_SKILLS : has
+    SKILLS ||--o{ USER_SKILLS : "tagged as"
+    USERS ||--o{ SKILL_GAP_ASSESSMENTS : takes
+    SKILL_GAP_ASSESSMENTS ||--o{ ASSESSMENT_GAP_DETAILS : contains
+    SKILLS ||--o{ ASSESSMENT_GAP_DETAILS : evaluated
+    SKILLS ||--o{ COURSES : teaches
+    USERS ||--o{ RECOMMENDATIONS : receives
+    COURSES ||--o{ RECOMMENDATIONS : "is recommended"
+    USERS ||--o| MENTORS : "becomes"
+    MENTORS ||--o{ MENTORSHIP_REQUESTS : receives
+    USERS ||--o{ MENTORSHIP_REQUESTS : requests
+    USERS ||--o{ SAFETY_REPORTS : files
+
+    USERS {
+        int user_id PK
+        varchar full_name
+        varchar email UK
+        varchar password_hash
+        enum role
+        varchar phone
+        varchar location
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SKILLS {
+        int skill_id PK
+        varchar skill_name UK
+        varchar category
+    }
+
+    USER_SKILLS {
+        int user_skill_id PK
+        int user_id FK
+        int skill_id FK
+        enum proficiency_level
+    }
+
+    SKILL_GAP_ASSESSMENTS {
+        int assessment_id PK
+        int user_id FK
+        varchar target_role
+        decimal overall_score
+        timestamp assessed_at
+    }
+
+    ASSESSMENT_GAP_DETAILS {
+        int gap_detail_id PK
+        int assessment_id FK
+        int skill_id FK
+        enum required_level
+        enum current_level
+        decimal gap_score
+    }
+
+    COURSES {
+        int course_id PK
+        varchar title
+        varchar provider
+        int skill_id FK
+        varchar url
+        int duration_hours
+    }
+
+    RECOMMENDATIONS {
+        int recommendation_id PK
+        int user_id FK
+        int course_id FK
+        decimal match_score
+        timestamp recommended_at
+        enum status
+    }
+
+    MENTORS {
+        int mentor_id PK
+        int user_id FK,UK
+        varchar expertise_area
+        text bio
+        boolean is_verified
+    }
+
+    MENTORSHIP_REQUESTS {
+        int request_id PK
+        int mentee_id FK
+        int mentor_id FK
+        enum status
+        timestamp requested_at
+    }
+
+    SAFETY_REPORTS {
+        int report_id PK
+        int user_id FK
+        varchar incident_type
+        text description
+        enum status
+        timestamp reported_at
+    }
