@@ -47,5 +47,7 @@ def db_health_check(db: Session = Depends(get_db)):
 
 # Routers for users, skills, assessments, recommendations, mentorship,
 # and safety reports get registered here as they're built, e.g.:
-# from app.routers import users
-# app.include_router(users.router, prefix="/users", tags=["Users"])
+from app.routers import auth, users, skills
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(skills.router)

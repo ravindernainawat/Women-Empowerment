@@ -15,7 +15,7 @@ from app.security import decode_access_token
 
 # OAuth2PasswordBearer tells FastAPI that the token should be sent in the 
 # Authorization header with a Bearer scheme. The tokenUrl points to the login route.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 
 def get_current_user(
