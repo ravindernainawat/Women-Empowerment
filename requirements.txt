@@ -7,3 +7,7 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 python-dotenv==1.0.1
 alembic==1.13.3
+passlib[bcrypt]
+bcrypt==3.2.2
+python-jose[cryptography]
+pytest

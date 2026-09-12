@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     # --- Security -------------------------------------------------------
     SECRET_KEY: str = "replace-this-with-a-strong-random-secret"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ALGORITHM: str = "HS256"
 
     # --- CORS -------------------------------------------------------
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]

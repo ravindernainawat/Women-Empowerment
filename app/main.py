@@ -13,7 +13,10 @@ from app.database import engine, Base, get_db
 
 # Creates tables if they don't exist yet. For anything beyond local dev,
 # switch to Alembic migrations instead of relying on this.
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not connect to database to create tables: {e}")
 
 app = FastAPI(
     title=settings.APP_NAME,
