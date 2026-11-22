@@ -1,0 +1,53 @@
+﻿version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: weis_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: weis_db
+      MYSQL_USER: weis_user
+      MYSQL_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "weis_user", "-pchangeme"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weis_api
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://weis_user:changeme@db:3306/weis_db
+      - ENV=production
+      - DEBUG=False
+      - SECRET_KEY=replace-with-secure-32-byte-hex-in-production
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: weis_frontend
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
