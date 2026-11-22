@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select';
 import { ProgressRing } from '../../components/ui/ProgressRing';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState } from '../../components/ui/EmptyState';
 import {
   Zap,
   BookOpen,
@@ -375,6 +376,17 @@ export const AssessmentPage: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Empty State when no assessments exist */}
+      {mode !== 'creating' && !activeResult && (
+        <EmptyState
+          title="No skill gap assessments yet"
+          description="Benchmark your current capabilities against industry standards. Pinpoint exact competency deficits and receive tailored course recommendations."
+          actionLabel="Run Your First Assessment"
+          onAction={startNewAssessment}
+          icon={<Zap size={28} />}
+        />
       )}
     </div>
   );

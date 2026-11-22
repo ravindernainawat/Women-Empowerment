@@ -34,9 +34,9 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (demoEmail: string) => {
+  const handleQuickFill = (demoEmail: string, demoPassword: string = 'password123') => {
     setEmail(demoEmail);
-    setPassword('demo1234');
+    setPassword(demoPassword);
     setError(null);
   };
 
@@ -157,7 +157,7 @@ export const LoginPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={() => handleQuickFill('amina@example.com')}
+            onClick={() => handleQuickFill('mentee@weis.org', 'password123')}
             style={{
               padding: '6px 12px',
               borderRadius: 'var(--radius-full)',
@@ -175,7 +175,7 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleQuickFill('sunita.sharma@example.com')}
+            onClick={() => handleQuickFill('mentor@weis.org', 'password123')}
             style={{
               padding: '6px 12px',
               borderRadius: 'var(--radius-full)',
@@ -193,7 +193,7 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => handleQuickFill('admin@weis.org')}
+            onClick={() => handleQuickFill('admin@weis.org', 'admin123')}
             style={{
               padding: '6px 12px',
               borderRadius: 'var(--radius-full)',

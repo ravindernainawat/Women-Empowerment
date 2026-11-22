@@ -162,7 +162,23 @@ def seed_database(db: Session):
             "location": "Bengaluru, India",
         },
         {
+            "email": "amina@example.com",
+            "full_name": "Amina Rao",
+            "password_hash": hash_password("password123"),
+            "role": RoleEnum.mentee,
+            "phone": "+91 98765 43210",
+            "location": "Bengaluru, India",
+        },
+        {
             "email": "mentor@weis.org",
+            "full_name": "Dr. Sunita Sharma",
+            "password_hash": hash_password("password123"),
+            "role": RoleEnum.mentor,
+            "phone": "+91 98111 22334",
+            "location": "Mumbai, India",
+        },
+        {
+            "email": "sunita.sharma@example.com",
             "full_name": "Dr. Sunita Sharma",
             "password_hash": hash_password("password123"),
             "role": RoleEnum.mentor,

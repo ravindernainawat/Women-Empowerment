@@ -20,7 +20,7 @@ import {
 import { usersApi } from '../../api/users';
 
 export const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [location, setLocation] = useState(user?.location || '');
@@ -35,7 +35,8 @@ export const ProfilePage: React.FC = () => {
     setIsSaving(true);
     setSaveError(null);
     try {
-      await usersApi.updateProfile({ phone, location });
+      const updated = await usersApi.updateProfile({ phone, location });
+      updateUser(updated);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3500);
     } catch {

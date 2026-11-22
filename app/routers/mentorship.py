@@ -53,6 +53,7 @@ def _request_to_response(req: MentorshipRequest) -> dict:
         if req.mentor and req.mentor.user
         else f"Mentor #{req.mentor_id}"
     )
+    mentor_expertise = req.mentor.expertise_area if req.mentor else None
     return {
         "request_id": req.request_id,
         "mentee_id": req.mentee_id,
@@ -61,6 +62,7 @@ def _request_to_response(req: MentorshipRequest) -> dict:
         "mentor_name": mentor_name,
         "status": req.status,
         "requested_at": req.requested_at,
+        "mentor_expertise": mentor_expertise,
     }
 
 

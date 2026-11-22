@@ -127,6 +127,7 @@ export interface MentorshipRequest {
    */
   mentee_name?: string;
   mentor_name?: string;
+  mentor_expertise?: string | null;
   /** Joined entities — populated only when using mock data or enriched client-side */
   mentor?: Mentor;
   mentee?: User;

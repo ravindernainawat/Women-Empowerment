@@ -1,9 +1,9 @@
 /**
- * Auth API Service
+ * Auth API Service — Direct Live Backend Integration
+ * All operations communicate with the FastAPI backend.
  */
 import { apiClient } from './client';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../types';
-import { MOCK_USERS } from '../data/mockData';
 
 export const authApi = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -29,20 +29,9 @@ export const authApi = {
         token_type: token_type || 'bearer',
         user: userRes.data,
       };
-    } catch {
-      // Offline / dev fallback when backend is unreachable
-      const found = MOCK_USERS.find((u) => u.email.toLowerCase() === credentials.email.toLowerCase());
-      const user: User = found || {
-        user_id: 999,
-        full_name: credentials.email.split('@')[0],
-        email: credentials.email,
-        role: 'mentee',
-      };
-      return {
-        access_token: 'mock-jwt-token-weis',
-        token_type: 'bearer',
-        user,
-      };
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Invalid email or password.';
+      throw new Error(message);
     }
   },
 
@@ -58,36 +47,31 @@ export const authApi = {
         location: data.location || null,
       });
 
-      // 2. Immediately log in to get session token
-      return await this.login({ email: data.email, password: data.password });
-    } catch {
-      const user: User = {
-        user_id: Date.now(),
-        full_name: data.full_name,
-        email: data.email,
-        role: data.role,
-        phone: data.phone || null,
-        location: data.location || null,
-        created_at: new Date().toISOString(),
-      };
-      return {
-        access_token: 'mock-jwt-token-weis',
-        token_type: 'bearer',
-        user,
-      };
+      // 2. If mentor role and expertise/bio supplied, create mentor profile
+      const loginRes = await this.login({ email: data.email, password: data.password });
+
+      if (data.role === 'mentor' && (data.expertise_area || data.bio)) {
+        try {
+          await apiClient.post('/api/mentors/register', {
+            expertise_area: data.expertise_area || 'General Mentorship',
+            bio: data.bio || '',
+          }, {
+            headers: { Authorization: `Bearer ${loginRes.access_token}` },
+          });
+        } catch (e) {
+          console.warn('Mentor profile creation warning:', e);
+        }
+      }
+
+      return loginRes;
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Registration failed. Please verify your details.';
+      throw new Error(message);
     }
   },
 
   async getCurrentUser(): Promise<User> {
-    try {
-      const response = await apiClient.get<User>('/api/auth/me');
-      return response.data;
-    } catch {
-      const saved = localStorage.getItem('weis_user');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-      return MOCK_USERS[0];
-    }
+    const response = await apiClient.get<User>('/api/auth/me');
+    return response.data;
   },
 };

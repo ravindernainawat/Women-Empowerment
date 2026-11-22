@@ -42,6 +42,7 @@ class MentorshipRequestResponse(BaseModel):
     mentor_name: str
     status: MentorshipStatusEnum
     requested_at: Optional[datetime] = None
+    mentor_expertise: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

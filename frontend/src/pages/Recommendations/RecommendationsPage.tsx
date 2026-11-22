@@ -24,7 +24,6 @@ export const RecommendationsPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadRecs = useCallback(async () => {
@@ -34,10 +33,8 @@ export const RecommendationsPage: React.FC = () => {
     try {
       const data = await recommendationsApi.getRecommendations(user.user_id);
       setRecommendations(data);
-      setIsDemoMode(recommendationsApi.isDemoMode);
     } catch (err) {
       setRecommendations([]);
-      setIsDemoMode(true);
       setErrorMessage(err instanceof Error ? err.message : 'Unable to load recommendations.');
     } finally {
       setIsLoading(false);
@@ -55,13 +52,10 @@ export const RecommendationsPage: React.FC = () => {
     try {
       const result = await recommendationsApi.generateRecommendations();
       setRecommendations(result.recommendations.length ? result.recommendations : []);
-      setIsDemoMode(false);
       if (!result.recommendations.length) {
         setErrorMessage(result.message || 'No recommendations were generated.');
       }
     } catch (err) {
-      setRecommendations([]);
-      setIsDemoMode(recommendationsApi.isDemoMode);
       setErrorMessage(err instanceof Error ? err.message : 'Could not generate recommendations from the live backend.');
     } finally {
       setIsGenerating(false);
@@ -99,12 +93,6 @@ export const RecommendationsPage: React.FC = () => {
         title="Targeted Learning & Course Roadmaps"
         description="High-impact learning courses directly mapped to bridge your identified skill gaps and accelerate role readiness."
       />
-
-      {isDemoMode && (
-        <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', color: 'var(--color-warning-700)' }}>
-          Demo/offline mode: showing sample course recommendations from the mock catalogue. Live recommendation generation requires a working backend.
-        </div>
-      )}
 
       {errorMessage && (
         <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--color-red-700)' }}>
@@ -150,7 +138,9 @@ export const RecommendationsPage: React.FC = () => {
       ) : filtered.length === 0 ? (
         <EmptyState
           title="No recommendations yet"
-          description="Run a latest assessment or generate a fresh recommendation set to populate your course roadmap."
+          description="Complete a skill gap assessment to identify your competency deficits, then generate a personalized course roadmap."
+          actionLabel="Take Skill Assessment"
+          onAction={() => window.location.assign('/assessment')}
           icon={<BookOpen size={28} />}
         />
       ) : (

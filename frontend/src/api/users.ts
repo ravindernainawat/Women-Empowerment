@@ -13,31 +13,13 @@ export interface UpdateProfilePayload {
 
 export const usersApi = {
   async getProfile(): Promise<User> {
-    try {
-      const res = await apiClient.get<User>('/api/users/me');
-      return res.data;
-    } catch {
-      const saved = localStorage.getItem('weis_user');
-      if (saved) return JSON.parse(saved);
-      throw new Error('User not found');
-    }
+    const res = await apiClient.get<User>('/api/users/me');
+    return res.data;
   },
 
   async updateProfile(updates: UpdateProfilePayload): Promise<User> {
-    try {
-      const res = await apiClient.put<User>('/api/users/me', updates);
-      localStorage.setItem('weis_user', JSON.stringify(res.data));
-      return res.data;
-    } catch {
-      // Offline fallback: update stored user in localStorage
-      const saved = localStorage.getItem('weis_user');
-      if (saved) {
-        const user = JSON.parse(saved);
-        const updated = { ...user, ...updates };
-        localStorage.setItem('weis_user', JSON.stringify(updated));
-        return updated;
-      }
-      throw new Error('Unable to update profile');
-    }
+    const res = await apiClient.put<User>('/api/users/me', updates);
+    localStorage.setItem('weis_user', JSON.stringify(res.data));
+    return res.data;
   },
 };

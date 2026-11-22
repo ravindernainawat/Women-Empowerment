@@ -21,3 +21,6 @@ frontend/dist/
 # Databases
 *.db
 *.sqlite3
+
+# GitHub Workflows (requires separate workflow-scoped token)
+.github/

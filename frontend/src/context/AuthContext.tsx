@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, RoleEnum, LoginRequest, RegisterRequest } from '../types';
 import { authApi } from '../api/auth';
-import { MOCK_USERS } from '../data/mockData';
+import { usersApi } from '../api/users';
+
+const DEMO_CREDENTIALS: Record<RoleEnum, { email: string; password: string }> = {
+  mentee: { email: 'mentee@weis.org', password: 'password123' },
+  mentor: { email: 'mentor@weis.org', password: 'password123' },
+  admin: { email: 'admin@weis.org', password: 'admin123' },
+};
 
 interface AuthContextType {
   user: User | null;
@@ -10,7 +16,8 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
-  switchRole: (role: RoleEnum) => void;
+  switchRole: (role: RoleEnum) => Promise<void>;
+  updateUser: (updated: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,17 +26,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('weis_token');
+    localStorage.removeItem('weis_user');
+  };
+
   useEffect(() => {
-    // Check saved token / user on mount
+    const token = localStorage.getItem('weis_token');
     const savedUser = localStorage.getItem('weis_user');
-    if (savedUser) {
+
+    if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+
+        // Fetch fresh profile from backend to ensure token validity
+        usersApi
+          .getProfile()
+          .then((freshUser) => {
+            setUser(freshUser);
+            localStorage.setItem('weis_user', JSON.stringify(freshUser));
+          })
+          .catch(() => {
+            logout();
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+        return;
       } catch {
-        localStorage.removeItem('weis_user');
+        logout();
       }
-    } else {
-      setUser(null);
     }
     setIsLoading(false);
   }, []);
@@ -58,22 +86,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('weis_token');
-    localStorage.removeItem('weis_user');
+  const switchRole = async (role: RoleEnum) => {
+    const creds = DEMO_CREDENTIALS[role];
+    if (creds) {
+      await login(creds);
+    }
   };
 
-  // Helper for evaluation / testing different user journeys (mentee vs mentor vs admin)
-  const switchRole = (role: RoleEnum) => {
-    const target = MOCK_USERS.find((u) => u.role === role) || {
-      user_id: Date.now(),
-      full_name: `${role.toUpperCase()} Demo User`,
-      email: `${role}@weis.org`,
-      role,
-    };
-    setUser(target);
-    localStorage.setItem('weis_user', JSON.stringify(target));
+  const updateUser = (updated: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const nextUser = { ...prev, ...updated };
+      localStorage.setItem('weis_user', JSON.stringify(nextUser));
+      return nextUser;
+    });
   };
 
   return (
@@ -86,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         switchRole,
+        updateUser,
       }}
     >
       {children}

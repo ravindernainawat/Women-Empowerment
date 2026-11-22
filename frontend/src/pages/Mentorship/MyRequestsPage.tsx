@@ -185,11 +185,11 @@ export const MyRequestsPage: React.FC = () => {
                           <Calendar size={12} />
                           Requested on {new Date(req.requested_at || '').toLocaleDateString()}
                         </span>
-                        {req.mentor?.expertise_area && user.role === 'mentee' && (
+                        {(req.mentor_expertise || req.mentor?.expertise_area) && user.role === 'mentee' && (
                           <>
                             <span>•</span>
                             <span style={{ color: 'var(--color-primary-700)', fontWeight: 600 }}>
-                              {req.mentor.expertise_area}
+                              {req.mentor_expertise || req.mentor?.expertise_area}
                             </span>
                           </>
                         )}
