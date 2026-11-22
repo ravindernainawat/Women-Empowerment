@@ -7,6 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   ShieldAlert,
   Shield,
@@ -61,6 +62,12 @@ export const SafetyReportPage: React.FC = () => {
       <PageTitle
         title="Confidential Safety & Inclusion Reporting Sanctuary"
         description="A trauma-informed, secure space to document workplace or platform concerns. Reports are strictly isolated to platform administrators."
+        action={
+          <VoiceGuidanceButton
+            textToRead="Confidential Safety and Inclusion Reporting Sanctuary. This is a trauma-informed, secure space to document workplace or platform concerns. Your report is strictly private and visible only to verified platform administrators. No mentor, colleague, or other platform participant can access your safety reports."
+            label="Listen to Safety Guide"
+          />
+        }
       />
 
       {isSubmitted ? (

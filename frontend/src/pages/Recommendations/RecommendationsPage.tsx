@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { recommendationsApi } from '../../api/recommendations';
+import { assessmentsApi } from '../../api/assessments';
 import { Recommendation, RecommendationStatusEnum } from '../../types';
 import { PageTitle } from '../../components/common/PageTitle';
 import { Card } from '../../components/ui/Card';
@@ -27,14 +28,21 @@ export const RecommendationsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [latestScore, setLatestScore] = useState<number>(68);
 
   const loadRecs = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const data = await recommendationsApi.getRecommendations(user.user_id);
+      const [data, latestAssessment] = await Promise.all([
+        recommendationsApi.getRecommendations(user.user_id),
+        assessmentsApi.getLatestAssessment(user.user_id),
+      ]);
       setRecommendations(data);
+      if (latestAssessment?.overall_score != null) {
+        setLatestScore(latestAssessment.overall_score);
+      }
     } catch (err) {
       setRecommendations([]);
       setErrorMessage(err instanceof Error ? err.message : 'Unable to load recommendations.');
@@ -103,7 +111,7 @@ export const RecommendationsPage: React.FC = () => {
       />
 
       {/* Real-time Opportunity Radar for Inclusive Job Matching */}
-      <OpportunityRadar />
+      <OpportunityRadar currentScore={latestScore} />
 
       {errorMessage && (
         <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--color-red-700)' }}>

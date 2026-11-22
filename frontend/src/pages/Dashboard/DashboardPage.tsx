@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { PageTitle } from '../../components/common/PageTitle';
 import { Spinner } from '../../components/ui/Spinner';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   Target,
   Zap,
@@ -24,6 +25,7 @@ import {
   Clock,
   ChevronRight,
   Shield,
+  TrendingUp,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -127,7 +129,11 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+              <VoiceGuidanceButton
+                textToRead={`${greeting} ${user.full_name.split(' ')[0]}. Welcome to your WEIS career readiness dashboard. Your current readiness score is ${score} percent for the role of ${targetRole}. You have ${userSkills.length} skills logged, ${recommendations.length} course recommendations, and ${requests.length} mentorship connections.`}
+                label="Narrate Dashboard"
+              />
               <Link to="/assessment">
                 <Button variant="gradient" size="md">
                   <Zap size={16} />
@@ -483,6 +489,11 @@ export const DashboardPage: React.FC = () => {
             <Link to="/mentorship/directory">
               <Button size="sm" variant="outline">
                 <Users size={14} /> Connect With Mentors
+              </Button>
+            </Link>
+            <Link to="/recommendations">
+              <Button size="sm" variant="primary">
+                <TrendingUp size={14} /> View Opportunity Radar ({score}% Ready)
               </Button>
             </Link>
             <Link to="/safety/report">
