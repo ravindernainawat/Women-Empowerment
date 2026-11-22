@@ -8,6 +8,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { OpportunityRadar } from '../../components/recommendations/OpportunityRadar';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   BookOpen,
   Clock,
@@ -92,7 +94,16 @@ export const RecommendationsPage: React.FC = () => {
       <PageTitle
         title="Targeted Learning & Course Roadmaps"
         description="High-impact learning courses directly mapped to bridge your identified skill gaps and accelerate role readiness."
+        action={
+          <VoiceGuidanceButton
+            textToRead="Targeted Learning and Course Roadmaps. High-impact courses curated to bridge your identified skill gaps. View the Opportunity Radar below to see which inclusive employers hire at your readiness score."
+            label="Audio Overview"
+          />
+        }
       />
+
+      {/* Real-time Opportunity Radar for Inclusive Job Matching */}
+      <OpportunityRadar />
 
       {errorMessage && (
         <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--color-red-700)' }}>

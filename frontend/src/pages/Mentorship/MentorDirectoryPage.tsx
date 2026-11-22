@@ -11,6 +11,8 @@ import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { Input } from '../../components/ui/Input';
+import { SisterhoodPods } from '../../components/mentorship/SisterhoodPods';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   Users,
   CheckCircle2,
@@ -89,9 +91,18 @@ export const MentorDirectoryPage: React.FC = () => {
   return (
     <div>
       <PageTitle
-        title="Verified Mentorship Network"
-        description="Connect 1-on-1 with vetted industry leaders, senior engineers, and executives dedicated to supporting women across tech."
+        title="Verified Mentorship Network & Sisterhood Pods"
+        description="Connect 1-on-1 with vetted industry leaders, or collaborate inside peer learning pods with bi-weekly flash AMAs."
+        action={
+          <VoiceGuidanceButton
+            textToRead="Verified Mentorship Network and Sisterhood Pods. Connect one-on-one with vetted industry leaders or join a peer learning circle of four to five women working on the same career path."
+            label="Audio Overview"
+          />
+        }
       />
+
+      {/* Sisterhood Peer Learning Pods */}
+      <SisterhoodPods />
 
       {successMessage && (
         <div

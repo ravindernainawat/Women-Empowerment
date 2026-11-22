@@ -12,6 +12,8 @@ import { ProgressRing } from '../../components/ui/ProgressRing';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { CareerReturneeAnalyzer } from '../../components/assessment/CareerReturneeAnalyzer';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   Zap,
   BookOpen,
@@ -35,6 +37,7 @@ export const AssessmentPage: React.FC = () => {
 
   // Workflow State: 'history' | 'creating' | 'results'
   const [mode, setMode] = useState<'history' | 'creating' | 'results'>('history');
+  const [activeTab, setActiveTab] = useState<'gap' | 'returnee'>('gap');
   const [targetRole, setTargetRole] = useState(PRESET_ROLES[0]);
   const [skillRatings, setSkillRatings] = useState<
     { skill_id: number; required_level: ProficiencyEnum; current_level: ProficiencyEnum }[]
@@ -118,17 +121,72 @@ export const AssessmentPage: React.FC = () => {
         title="Skill-Gap Assessment Laboratory"
         description="Benchmark your current capabilities against industry standards. Pinpoint exact competency deficits and discover customized learning roadmaps."
         action={
-          mode !== 'creating' ? (
-            <Button variant="gradient" onClick={startNewAssessment}>
-              <Zap size={16} /> Run New Assessment
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={() => setMode('history')}>
-              Cancel
-            </Button>
-          )
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <VoiceGuidanceButton
+              textToRead="Skill-Gap Assessment Laboratory. Benchmark your current capabilities against industry standards, or switch to the Break-to-Career Transformer to map your prior career pause experience into verified tech competencies."
+              label="Audio Guidance"
+            />
+            {mode !== 'creating' ? (
+              <Button variant="gradient" onClick={startNewAssessment}>
+                <Zap size={16} /> Run New Assessment
+              </Button>
+            ) : (
+              <Button variant="ghost" onClick={() => setMode('history')}>
+                Cancel
+              </Button>
+            )}
+          </div>
         }
       />
+
+      {/* Mode Switcher Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('gap')}
+          style={{
+            padding: '8px 18px',
+            borderRadius: 'var(--radius-full)',
+            border: `1.5px solid ${activeTab === 'gap' ? 'var(--color-primary-500)' : 'var(--color-gray-200)'}`,
+            backgroundColor: activeTab === 'gap' ? 'var(--color-primary-50)' : 'var(--color-white)',
+            color: activeTab === 'gap' ? 'var(--color-primary-700)' : 'var(--color-gray-700)',
+            fontWeight: 700,
+            fontSize: '13px',
+            cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
+            boxShadow: activeTab === 'gap' ? 'var(--shadow-xs)' : 'none',
+          }}
+        >
+          Target Role Gap Analysis
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('returnee')}
+          style={{
+            padding: '8px 18px',
+            borderRadius: 'var(--radius-full)',
+            border: `1.5px solid ${activeTab === 'returnee' ? 'var(--color-primary-500)' : 'var(--color-gray-200)'}`,
+            backgroundColor: activeTab === 'returnee' ? 'var(--color-primary-50)' : 'var(--color-white)',
+            color: activeTab === 'returnee' ? 'var(--color-primary-700)' : 'var(--color-gray-700)',
+            fontWeight: 700,
+            fontSize: '13px',
+            cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
+            boxShadow: activeTab === 'returnee' ? 'var(--shadow-xs)' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <span>🔄 Break-to-Career Transformer (Women Returnees)</span>
+        </button>
+      </div>
+
+      {activeTab === 'returnee' ? (
+        <CareerReturneeAnalyzer />
+      ) : (
+        <div>
 
       {/* CREATE ASSESSMENT WORKFLOW */}
       {mode === 'creating' && (
@@ -387,6 +445,8 @@ export const AssessmentPage: React.FC = () => {
           onAction={startNewAssessment}
           icon={<Zap size={28} />}
         />
+      )}
+        </div>
       )}
     </div>
   );

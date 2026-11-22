@@ -27,9 +27,19 @@ apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      // Token expired — clear storage; AuthContext will handle redirect.
+      // Token expired or invalid — clear credentials
       localStorage.removeItem('weis_token');
       localStorage.removeItem('weis_user');
+
+      // Redirect to /login if on a protected route
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname !== '/login' &&
+        window.location.pathname !== '/register' &&
+        window.location.pathname !== '/'
+      ) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
