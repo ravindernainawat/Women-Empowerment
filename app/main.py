@@ -48,7 +48,21 @@ def db_health_check(db: Session = Depends(get_db)):
 
 # Routers for users, skills, assessments, recommendations, mentorship,
 # safety reports, and admin governance get registered here:
-from app.routers import auth, users, skills, assessments, recommendations, mentorship, safety, admin
+from app.routers import (
+    auth,
+    users,
+    skills,
+    assessments,
+    recommendations,
+    mentorship,
+    safety,
+    admin,
+    verify,
+    schemes,
+    resources,
+    returnee,
+    extractor,
+)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(skills.router)
@@ -57,3 +71,8 @@ app.include_router(recommendations.router)
 app.include_router(mentorship.router)
 app.include_router(safety.router)
 app.include_router(admin.router)
+app.include_router(verify.router)
+app.include_router(schemes.router)
+app.include_router(resources.router)
+app.include_router(returnee.router)
+app.include_router(extractor.router)

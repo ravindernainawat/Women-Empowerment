@@ -12,12 +12,16 @@ const LoginPage           = lazy(() => import('../pages/Auth/LoginPage').then(m 
 const RegisterPage        = lazy(() => import('../pages/Auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const DashboardPage       = lazy(() => import('../pages/Dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const SkillInventoryPage  = lazy(() => import('../pages/Skills/SkillInventoryPage').then(m => ({ default: m.SkillInventoryPage })));
+const SkillExtractorPage  = lazy(() => import('../pages/Skills/SkillExtractorPage').then(m => ({ default: m.SkillExtractorPage })));
 const AssessmentPage      = lazy(() => import('../pages/Assessment/AssessmentPage').then(m => ({ default: m.AssessmentPage })));
 const RecommendationsPage = lazy(() => import('../pages/Recommendations/RecommendationsPage').then(m => ({ default: m.RecommendationsPage })));
 const MentorDirectoryPage = lazy(() => import('../pages/Mentorship/MentorDirectoryPage').then(m => ({ default: m.MentorDirectoryPage })));
 const MyRequestsPage      = lazy(() => import('../pages/Mentorship/MyRequestsPage').then(m => ({ default: m.MyRequestsPage })));
 const SafetyReportPage    = lazy(() => import('../pages/Safety/SafetyReportPage').then(m => ({ default: m.SafetyReportPage })));
 const MyReportsPage       = lazy(() => import('../pages/Safety/MyReportsPage').then(m => ({ default: m.MyReportsPage })));
+const HelplinePage        = lazy(() => import('../pages/Safety/HelplinePage').then(m => ({ default: m.HelplinePage })));
+const AnonymousReportPage = lazy(() => import('../pages/Safety/AnonymousReportPage').then(m => ({ default: m.AnonymousReportPage })));
+const SchemesPage         = lazy(() => import('../pages/Schemes/SchemesPage').then(m => ({ default: m.SchemesPage })));
 const ProfilePage         = lazy(() => import('../pages/Profile/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const AdminDashboardPage  = lazy(() => import('../pages/Admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
 
@@ -47,12 +51,16 @@ export const AppRouter: React.FC = () => {
             <Route element={<AppLayout />}>
               <Route path="/dashboard"              element={<DashboardPage />} />
               <Route path="/skills"                 element={<SkillInventoryPage />} />
+              <Route path="/skills/extract"         element={<SkillExtractorPage />} />
               <Route path="/assessment"             element={<AssessmentPage />} />
               <Route path="/recommendations"        element={<RecommendationsPage />} />
               <Route path="/mentorship/directory"   element={<MentorDirectoryPage />} />
               <Route path="/mentorship/requests"    element={<MyRequestsPage />} />
               <Route path="/safety/report"          element={<SafetyReportPage />} />
               <Route path="/safety/my-reports"      element={<MyReportsPage />} />
+              <Route path="/safety/helplines"       element={<HelplinePage />} />
+              <Route path="/safety/anonymous"       element={<AnonymousReportPage />} />
+              <Route path="/schemes"                element={<SchemesPage />} />
               <Route path="/profile"                element={<ProfilePage />} />
 
               {/* Admin-only Routes */}

@@ -8,9 +8,26 @@ import { EyeOff, Eye, BookOpen } from 'lucide-react';
  * immediately transforms the browser view into a realistic, benign study note
  * ("Modern JavaScript Essentials") in < 50ms, protecting the user from onlookers.
  */
+const MASK_TITLE = 'Developer Documentation & Reference Notes';
+const REAL_TITLE = document.title || 'WEIS – Women Empowerment';
+
 export const QuickMaskModal: React.FC = () => {
   const [isMasked, setIsMasked] = useState(false);
   const [lastEscTime, setLastEscTime] = useState<number>(0);
+
+  const activateMask = () => {
+    // Stronger Quick-Mask: replace URL and title so browser history shows innocuous page
+    window.history.replaceState({ masked: true }, MASK_TITLE, '/study-notes');
+    document.title = MASK_TITLE;
+    // Clear any auth tokens from session storage visual access (tokens remain, only visual)
+    setIsMasked(true);
+  };
+
+  const deactivateMask = () => {
+    window.history.replaceState({ masked: false }, REAL_TITLE, window.location.pathname === '/study-notes' ? '/dashboard' : window.location.pathname);
+    document.title = REAL_TITLE;
+    setIsMasked(false);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -18,7 +35,7 @@ export const QuickMaskModal: React.FC = () => {
         const now = Date.now();
         if (now - lastEscTime < 500) {
           // Double press Esc -> Toggle Mask
-          setIsMasked((prev) => !prev);
+          activateMask();
         }
         setLastEscTime(now);
       }
@@ -42,7 +59,7 @@ export const QuickMaskModal: React.FC = () => {
         }}
       >
         <button
-          onClick={() => setIsMasked(true)}
+          onClick={activateMask}
           title="Emergency Quick-Mask: Press Esc twice or click to disguise this tab immediately"
           style={{
             display: 'flex',
@@ -89,7 +106,7 @@ export const QuickMaskModal: React.FC = () => {
             <span>Developer Documentation & Reference Notes</span>
           </div>
           <button
-            onClick={() => setIsMasked(false)}
+            onClick={deactivateMask}
             style={{
               display: 'flex',
               alignItems: 'center',

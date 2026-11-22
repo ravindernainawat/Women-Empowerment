@@ -208,3 +208,100 @@ def update_safety_report_status(
 
     return report
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Anonymous Safety Reporting & Tracking (Zero-Login Sanctuary)
+# ─────────────────────────────────────────────────────────────────────────────
+import secrets
+
+CRITICAL_KEYWORDS = {"danger", "threat", "violence", "stalk", "abuse", "assault", "attack", "harm", "kill", "weapon"}
+HIGH_KEYWORDS = {"harass", "blackmail", "intimidat", "leak", "photograph", "follow", "extort"}
+
+
+def classify_urgency(incident_type: str, description: str) -> str:
+    """NLP keyword triage classifier flagging high/urgent safety cases."""
+    combined = f"{incident_type} {description}".lower()
+    for kw in CRITICAL_KEYWORDS:
+        if kw in combined:
+            return "urgent"
+    for kw in HIGH_KEYWORDS:
+        if kw in combined:
+            return "high"
+    return "standard"
+
+
+@router.post(
+    "/safety-reports/anonymous",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_anonymous_safety_report(
+    body: SafetyReportCreate,
+    db: Session = Depends(get_db),
+):
+    """
+    Submits a 100% confidential, anonymous safety incident report without requiring authentication.
+    Returns a secure random tracking token so the reporter can monitor progress privately.
+    """
+    token = f"SAFE-{secrets.token_hex(3).upper()}-{secrets.randbelow(9000) + 1000}"
+    urgency = classify_urgency(body.incident_type, body.description)
+
+    new_report = SafetyReport(
+        user_id=None,
+        incident_type=body.incident_type,
+        description=body.description,
+        urgency=urgency,
+        tracking_token=token,
+        status=SafetyStatusEnum.submitted,
+    )
+
+    try:
+        db.add(new_report)
+        db.commit()
+        db.refresh(new_report)
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while filing the anonymous report.",
+        )
+
+    return {
+        "tracking_token": token,
+        "status": new_report.status.value,
+        "urgency": urgency,
+        "incident_type": new_report.incident_type,
+        "reported_at": new_report.reported_at.isoformat() if new_report.reported_at else None,
+        "message": "Report logged anonymously. Save your tracking token to monitor resolution status.",
+    }
+
+
+@router.get(
+    "/safety-reports/track/{tracking_token}",
+)
+def track_anonymous_report(
+    tracking_token: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Public case status tracker using only the anonymous tracking token.
+    Never exposes identifying reporter information.
+    """
+    report = (
+        db.query(SafetyReport)
+        .filter(SafetyReport.tracking_token == tracking_token.strip().upper())
+        .first()
+    )
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Case tracking token not found in WEIS Confidential Sanctuary.",
+        )
+
+    return {
+        "tracking_token": report.tracking_token,
+        "incident_type": report.incident_type,
+        "status": report.status.value,
+        "urgency": getattr(report, "urgency", "standard"),
+        "reported_at": report.reported_at.isoformat() if report.reported_at else None,
+        "sanctuary_note": "Case is actively being reviewed under strict zero-retaliation protocols.",
+    }

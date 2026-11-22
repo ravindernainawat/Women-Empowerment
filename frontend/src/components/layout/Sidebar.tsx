@@ -14,6 +14,10 @@ import {
   User,
   HeartHandshake,
   Sparkles,
+  Phone,
+  Lock,
+  IndianRupee,
+  Brain,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -114,6 +118,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
                 <span>Skill Inventory</span>
               </NavLink>
 
+              <NavLink to="/skills/extract" style={linkStyle} onClick={onClose}>
+                <Brain size={18} style={{ color: 'var(--color-primary-500)', flexShrink: 0 }} />
+                <span>AI Skill Extractor</span>
+              </NavLink>
+
               <NavLink to="/assessment" style={linkStyle} onClick={onClose}>
                 <Zap size={18} style={{ color: 'var(--color-coral-500)', flexShrink: 0 }} />
                 <span>Gap Assessment</span>
@@ -200,9 +209,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
             <span>Confidential Report</span>
           </NavLink>
 
+          <NavLink to="/safety/anonymous" style={linkStyle} onClick={onClose}>
+            <Lock size={18} style={{ color: 'var(--color-safety-600)', flexShrink: 0 }} />
+            <span>Anonymous Report</span>
+          </NavLink>
+
           <NavLink to="/safety/my-reports" style={linkStyle} onClick={onClose}>
             <FileText size={18} style={{ color: 'var(--color-safety-600)', flexShrink: 0 }} />
             <span>My Safety Reports</span>
+          </NavLink>
+
+          <NavLink to="/safety/helplines" style={linkStyle} onClick={onClose}>
+            <Phone size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
+            <span>Emergency Helplines</span>
+          </NavLink>
+
+          {/* Government Schemes */}
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              color: 'var(--color-gray-400)',
+              textTransform: 'uppercase',
+              padding: 'var(--space-4) var(--space-3) var(--space-1-5)',
+              letterSpacing: '0.075em',
+            }}
+          >
+            Opportunities
+          </div>
+
+          <NavLink to="/schemes" style={linkStyle} onClick={onClose}>
+            <IndianRupee size={18} style={{ color: '#16a34a', flexShrink: 0 }} />
+            <span>Govt. Scheme Finder</span>
           </NavLink>
         </div>
 

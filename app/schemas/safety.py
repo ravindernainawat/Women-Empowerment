@@ -20,10 +20,12 @@ class SafetyReportCreate(BaseModel):
 class SafetyReportResponse(BaseModel):
     """Safety report returned by the API."""
     report_id: int
-    user_id: int
+    user_id: Optional[int] = None   # None for anonymous reports
     incident_type: str
     description: str
     status: SafetyStatusEnum
+    urgency: Optional[str] = "standard"
+    tracking_token: Optional[str] = None
     reported_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

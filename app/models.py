@@ -175,10 +175,12 @@ class SafetyReport(Base):
     __tablename__ = "safety_reports"
 
     report_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=True)
     incident_type = Column(String(150), nullable=False)
     description = Column(Text, nullable=False)
     status = Column(Enum(SafetyStatusEnum), nullable=False, default=SafetyStatusEnum.submitted)
+    urgency = Column(String(20), default="standard", nullable=False)
+    tracking_token = Column(String(50), unique=True, nullable=True, index=True)
     reported_at = Column(TIMESTAMP, default=datetime.utcnow)
 
     user = relationship("User", back_populates="safety_reports")
