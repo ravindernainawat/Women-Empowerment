@@ -175,6 +175,23 @@ export interface ApiError {
   status_code?: number;
 }
 
+export interface AdminStats {
+  total_users: number;
+  total_mentees: number;
+  total_mentors: number;
+  verified_mentors: number;
+  pending_mentors: number;
+  total_assessments: number;
+  avg_readiness_score: number;
+  total_skills_logged: number;
+  catalog_skills_count: number;
+  total_safety_reports: number;
+  open_safety_reports: number;
+  resolved_safety_reports: number;
+  total_mentorship_requests: number;
+  accepted_mentorship_requests: number;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

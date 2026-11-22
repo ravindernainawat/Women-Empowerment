@@ -13,6 +13,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { Input } from '../../components/ui/Input';
 import { SisterhoodPods } from '../../components/mentorship/SisterhoodPods';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
+import { useToast } from '../../context/ToastContext';
 import {
   Users,
   CheckCircle2,
@@ -26,6 +27,7 @@ import {
 
 export const MentorDirectoryPage: React.FC = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -67,12 +69,14 @@ export const MentorDirectoryPage: React.FC = () => {
       setSuccessMessage(
         `Mentorship inquiry successfully sent to ${mentorName}. You can track the response under "My Requests".`
       );
+      toast.success(`Mentorship request sent to ${mentorName}! Check My Requests.`);
       setSelectedMentor(null);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
         ?? (err instanceof Error ? err.message : 'Failed to send request. Please try again.');
       setRequestError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

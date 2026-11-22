@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { safetyApi } from '../../api/safety';
 import { mentorshipApi } from '../../api/mentorship';
-import { SafetyReport, SafetyStatusEnum, Mentor } from '../../types';
+import { adminApi } from '../../api/admin';
+import { SafetyReport, SafetyStatusEnum, Mentor, AdminStats } from '../../types';
 import { PageTitle } from '../../components/common/PageTitle';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
+import { useToast } from '../../context/ToastContext';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   ShieldAlert,
   UserCheck,
@@ -14,29 +17,39 @@ import {
   Clock,
   Filter,
   Check,
-  AlertCircle,
-  Eye,
-  ExternalLink,
+  Users,
+  Target,
+  Award,
+  TrendingUp,
+  BarChart3,
+  HeartHandshake,
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
+  const toast = useToast();
   const [reports, setReports] = useState<SafetyReport[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rList, mList] = await Promise.all([
+      const [rList, mList, sData] = await Promise.all([
         safetyApi.getAllReports(),
         mentorshipApi.getMentorsPending(),
-      ]);      setReports(rList);
+        adminApi.getStats(),
+      ]);
+      setReports(rList);
       setMentors(mList);
+      setStats(sData);
+    } catch {
+      toast.error('Failed to load administrative telemetry data.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     loadData();
@@ -46,20 +59,41 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       const updated = await safetyApi.updateReportStatus(reportId, status);
       setReports((prev) => prev.map((r) => (r.report_id === reportId ? updated : r)));
-    } catch (err) {
-      console.error(err);
+      if (stats) {
+        setStats({
+          ...stats,
+          open_safety_reports:
+            status === 'resolved' || status === 'dismissed'
+              ? Math.max(0, stats.open_safety_reports - 1)
+              : stats.open_safety_reports,
+          resolved_safety_reports:
+            status === 'resolved'
+              ? stats.resolved_safety_reports + 1
+              : stats.resolved_safety_reports,
+        });
+      }
+      toast.success(`Incident report #${reportId} status updated to ${status.replace('_', ' ')}.`);
+    } catch {
+      toast.error('Failed to update incident report status.');
     }
   };
 
   const handleVerifyMentor = async (mentorId: number) => {
     try {
       await mentorshipApi.verifyMentor(mentorId);
-      // Update local state to reflect verification without full reload
       setMentors((prev) =>
         prev.map((m) => (m.mentor_id === mentorId ? { ...m, is_verified: true } : m))
       );
-    } catch (err) {
-      console.error('Failed to verify mentor:', err);
+      if (stats) {
+        setStats({
+          ...stats,
+          verified_mentors: stats.verified_mentors + 1,
+          pending_mentors: Math.max(0, stats.pending_mentors - 1),
+        });
+      }
+      toast.success('Mentor credentials verified! Mentor is now active in the directory.');
+    } catch {
+      toast.error('Failed to verify mentor credentials.');
     }
   };
 
@@ -82,75 +116,127 @@ export const AdminDashboardPage: React.FC = () => {
   return (
     <div>
       <PageTitle
-        title="Administrative Governance & Safety Oversight"
-        description="Confidential incident monitoring, mentor verification queues, and platform integrity management."
+        title="Administrative Governance & Platform Telemetry"
+        description="Confidential incident monitoring, mentor verification queues, and system-wide KPI telemetry."
+        action={
+          <VoiceGuidanceButton
+            textToRead="Administrative Governance and Ecosystem Telemetry. View platform metrics, mentor vetting queues, and confidential safety incident reports."
+            label="Audio Summary"
+          />
+        }
       />
 
-      {/* Governance Metrics Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 'var(--space-5)',
-          marginBottom: 'var(--space-8)',
-        }}
-      >
-        <Card padding="md" variant="glass" hoverEffect>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
-              Open Incident Reports
-            </span>
-            <Badge variant="safety" size="sm" hasDot>
-              Confidential
-            </Badge>
-          </div>
-          <div style={{ marginTop: 'var(--space-3)' }}>
-            <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-safety-600)', lineHeight: 1 }}>
-              {openReports.length}
-            </div>
-            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '4px' }}>
-              Require administrative intervention
-            </div>
-          </div>
-        </Card>
+      {/* Platform Telemetry KPI Cards */}
+      <div style={{ marginBottom: 'var(--space-8)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-4)' }}>
+          <BarChart3 size={20} style={{ color: 'var(--color-primary-600)' }} />
+          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--color-gray-900)' }}>
+            Ecosystem Health & Operational Telemetry
+          </h2>
+        </div>
 
-        <Card padding="md" variant="glass" hoverEffect>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
-              Pending Mentor Vetting
-            </span>
-            <Badge variant="warning" size="sm" hasDot>
-              Vetting Queue
-            </Badge>
-          </div>
-          <div style={{ marginTop: 'var(--space-3)' }}>
-            <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-warning)', lineHeight: 1 }}>
-              {pendingVerificationMentors.length}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: 'var(--space-4)',
+          }}
+        >
+          {/* Card 1: Community Membership */}
+          <Card padding="md" variant="glass" hoverEffect>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
+                Platform Users
+              </span>
+              <Users size={16} style={{ color: 'var(--color-primary-600)' }} />
             </div>
-            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '4px' }}>
-              Awaiting background verification
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-gray-900)', lineHeight: 1 }}>
+                {stats?.total_users ?? 0}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: 'var(--color-primary-50)', color: 'var(--color-primary-700)', fontWeight: 600 }}>
+                  {stats?.total_mentees ?? 0} Mentees
+                </span>
+                <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: 'var(--color-accent-50)', color: 'var(--color-accent-700)', fontWeight: 600 }}>
+                  {stats?.total_mentors ?? 0} Mentors
+                </span>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        <Card padding="md" variant="glass" hoverEffect>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
-              Verified Mentors
-            </span>
-            <Badge variant="primary" size="sm" hasDot>
-              Active
-            </Badge>
-          </div>
-          <div style={{ marginTop: 'var(--space-3)' }}>
-            <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-primary-600)', lineHeight: 1 }}>
-              {mentors.filter((m) => m.is_verified).length}
+          {/* Card 2: Readiness Telemetry */}
+          <Card padding="md" variant="glass" hoverEffect>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
+                Avg Readiness Score
+              </span>
+              <TrendingUp size={16} style={{ color: 'var(--color-success)' }} />
             </div>
-            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '4px' }}>
-              Active in public mentorship directory
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-success)', lineHeight: 1 }}>
+                {stats?.avg_readiness_score ?? 0}%
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '8px' }}>
+                Across {stats?.total_assessments ?? 0} completed gap evaluations
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Card 3: Skills Logged */}
+          <Card padding="md" variant="glass" hoverEffect>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
+                Logged Skills
+              </span>
+              <Target size={16} style={{ color: 'var(--color-primary-600)' }} />
+            </div>
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-gray-900)', lineHeight: 1 }}>
+                {stats?.total_skills_logged ?? 0}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '8px' }}>
+                Catalog size: {stats?.catalog_skills_count ?? 0} benchmark skills
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 4: Mentorship Vetting */}
+          <Card padding="md" variant="glass" hoverEffect>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
+                Verified Mentors
+              </span>
+              <Award size={16} style={{ color: 'var(--color-primary-600)' }} />
+            </div>
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-primary-600)', lineHeight: 1 }}>
+                {stats?.verified_mentors ?? mentors.filter((m) => m.is_verified).length}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-warning)', marginTop: '8px', fontWeight: 600 }}>
+                {stats?.pending_mentors ?? pendingVerificationMentors.length} in vetting queue
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 5: Safety Oversight */}
+          <Card padding="md" variant="glass" hoverEffect>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-gray-400)', textTransform: 'uppercase' }}>
+                Safety Incidents
+              </span>
+              <ShieldAlert size={16} style={{ color: 'var(--color-safety-600)' }} />
+            </div>
+            <div style={{ marginTop: 'var(--space-2)' }}>
+              <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--color-safety-600)', lineHeight: 1 }}>
+                {openReports.length}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '8px' }}>
+                {stats?.resolved_safety_reports ?? 0} of {stats?.total_safety_reports ?? reports.length} resolved
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* Section 1: Mentor Vetting Queue */}
@@ -158,7 +244,7 @@ export const AdminDashboardPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-4)' }}>
           <UserCheck size={20} style={{ color: 'var(--color-primary-600)' }} />
           <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-gray-900)' }}>
-            Mentor Credential Verification Queue
+            Mentor Credential Verification Queue ({pendingVerificationMentors.length})
           </h2>
         </div>
 

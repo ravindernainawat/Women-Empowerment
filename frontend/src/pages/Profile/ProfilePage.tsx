@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { PageTitle } from '../../components/common/PageTitle';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
+import { useToast } from '../../context/ToastContext';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -22,6 +23,7 @@ import { usersApi } from '../../api/users';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const toast = useToast();
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [location, setLocation] = useState(user?.location || '');
@@ -39,9 +41,11 @@ export const ProfilePage: React.FC = () => {
       const updated = await usersApi.updateProfile({ phone, location });
       updateUser(updated);
       setIsSaved(true);
+      toast.success('Profile settings updated successfully!');
       setTimeout(() => setIsSaved(false), 3500);
     } catch {
       setSaveError('Failed to save profile changes. Please try again.');
+      toast.error('Failed to save profile changes. Please try again.');
     } finally {
       setIsSaving(false);
     }

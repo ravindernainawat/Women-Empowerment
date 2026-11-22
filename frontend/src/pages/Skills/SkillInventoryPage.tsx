@@ -13,6 +13,7 @@ import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
+import { useToast } from '../../context/ToastContext';
 import {
   Target,
   Plus,
@@ -24,6 +25,7 @@ import {
 
 export const SkillInventoryPage: React.FC = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +67,9 @@ export const SkillInventoryPage: React.FC = () => {
       setIsModalOpen(false);
       setSelectedSkillId('');
       setSelectedLevel('beginner');
+      toast.success('Skill added to your inventory!');
+    } catch {
+      toast.error('Failed to log skill. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -74,15 +79,22 @@ export const SkillInventoryPage: React.FC = () => {
     try {
       const updated = await skillsApi.updateUserSkill(skillId, newLevel);
       setUserSkills((prev) => prev.map((us) => (us.skill_id === skillId ? { ...us, proficiency_level: newLevel } : us)));
+      toast.info(`Proficiency updated to ${newLevel}.`);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to update proficiency level.');
     }
   };
 
   const handleDelete = async (skillId: number) => {
     if (!window.confirm('Remove this skill from your inventory?')) return;
-    await skillsApi.deleteUserSkill(skillId);
-    setUserSkills((prev) => prev.filter((us) => us.skill_id !== skillId));
+    try {
+      await skillsApi.deleteUserSkill(skillId);
+      setUserSkills((prev) => prev.filter((us) => us.skill_id !== skillId));
+      toast.info('Skill removed from inventory.');
+    } catch {
+      toast.error('Failed to remove skill.');
+    }
   };
 
   // Filter skills based on search & category

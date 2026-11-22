@@ -8,6 +8,7 @@ import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
+import { useToast } from '../../context/ToastContext';
 import {
   ShieldAlert,
   Shield,
@@ -29,6 +30,7 @@ const INCIDENT_TYPES = [
 
 export const SafetyReportPage: React.FC = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [incidentType, setIncidentType] = useState(INCIDENT_TYPES[0]);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,8 +52,10 @@ export const SafetyReportPage: React.FC = () => {
         description,
       });
       setIsSubmitted(true);
+      toast.success('Report filed securely. An administrator will review it promptly.');
     } catch {
       setError('Unable to submit your concern. Please try again or check your connectivity.');
+      toast.error('Unable to submit your concern. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
