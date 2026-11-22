@@ -11,7 +11,7 @@ export const adminApi = {
    * Requires admin authorization.
    */
   async getStats(): Promise<AdminStats> {
-    const response = await apiClient.get<AdminStats>('/admin/stats');
+    const response = await apiClient.get<AdminStats>('/api/admin/stats');
     return response.data;
   },
 };

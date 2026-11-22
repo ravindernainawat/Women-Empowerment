@@ -12,7 +12,6 @@ export interface Toast {
 }
 
 interface ToastContextType {
-  toasts: Toast[];
   showToast: (message: string, type?: ToastType, title?: string, duration?: number) => void;
   success: (message: string, title?: string, duration?: number) => void;
   error: (message: string, title?: string, duration?: number) => void;
@@ -76,7 +75,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const value = useMemo(
     () => ({
-      toasts,
       showToast,
       success,
       error,
@@ -84,7 +82,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       info,
       dismissToast,
     }),
-    [toasts, showToast, success, error, warning, info, dismissToast]
+    [showToast, success, error, warning, info, dismissToast]
   );
 
   return (

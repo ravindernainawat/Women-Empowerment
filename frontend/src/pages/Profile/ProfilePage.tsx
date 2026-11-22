@@ -33,8 +33,8 @@ export const ProfilePage: React.FC = () => {
 
   if (!user) return null;
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSaving(true);
     setSaveError(null);
     try {
@@ -197,7 +197,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-2)' }}>
-            <Button type="submit" variant="primary" size="md" isLoading={isSaving}>
+            <Button type="submit" onClick={handleSave} variant="primary" size="md" isLoading={isSaving}>
               <Save size={16} /> Save Profile Updates
             </Button>
           </div>
