@@ -13,12 +13,14 @@ import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CareerReturneeAnalyzer } from '../../components/assessment/CareerReturneeAnalyzer';
+import { ReadinessCertificateModal } from '../../components/assessment/ReadinessCertificateModal';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   Zap,
   BookOpen,
   History,
   Sliders,
+  Award,
 } from 'lucide-react';
 
 const PRESET_ROLES = [
@@ -44,6 +46,7 @@ export const AssessmentPage: React.FC = () => {
   >([]);
   const [activeResult, setActiveResult] = useState<SkillGapAssessment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCertOpen, setIsCertOpen] = useState(false);
 
   const initData = useCallback(async () => {
     if (!user) return;
@@ -313,11 +316,16 @@ export const AssessmentPage: React.FC = () => {
                   Evaluated on {new Date(activeResult.assessed_at || '').toLocaleDateString()}.
                   Your score reflects an objective comparison of current proficiency versus requirements. We have prioritized targeted learning pathways below to bridge these gaps.
                 </p>
-                <Link to="/recommendations">
-                  <Button variant="gradient" size="md">
-                    <BookOpen size={16} /> View Recommended Courses for These Gaps →
+                <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                  <Link to="/recommendations">
+                    <Button variant="gradient" size="md">
+                      <BookOpen size={16} /> View Recommended Courses for These Gaps →
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="md" onClick={() => setIsCertOpen(true)}>
+                    <Award size={16} /> Export Verified Credential (PDF)
                   </Button>
-                </Link>
+                </div>
               </div>
             </div>
           </Card>
@@ -448,6 +456,14 @@ export const AssessmentPage: React.FC = () => {
       )}
         </div>
       )}
+
+      {/* Verified Readiness Credential Modal */}
+      <ReadinessCertificateModal
+        isOpen={isCertOpen}
+        onClose={() => setIsCertOpen(false)}
+        user={user}
+        assessment={activeResult}
+      />
     </div>
   );
 };

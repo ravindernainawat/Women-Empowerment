@@ -13,6 +13,7 @@ import { Button } from '../../components/ui/Button';
 import { PageTitle } from '../../components/common/PageTitle';
 import { Spinner } from '../../components/ui/Spinner';
 import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
+import { ReadinessCertificateModal } from '../../components/assessment/ReadinessCertificateModal';
 import {
   Target,
   Zap,
@@ -26,6 +27,7 @@ import {
   ChevronRight,
   Shield,
   TrendingUp,
+  Award,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -35,6 +37,7 @@ export const DashboardPage: React.FC = () => {
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [requests, setRequests] = useState<MentorshipRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -228,7 +231,25 @@ export const DashboardPage: React.FC = () => {
             )}
 
             <div style={{ borderTop: '1px solid var(--color-gray-100)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>Based on curriculum standards</span>
+              <button
+                type="button"
+                onClick={() => setIsCertModalOpen(true)}
+                disabled={!latestAssessment}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: latestAssessment ? 'var(--color-primary-600)' : 'var(--color-gray-400)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: latestAssessment ? 'pointer' : 'default',
+                }}
+              >
+                <Award size={14} /> Official Credential
+              </button>
               <Link to="/assessment" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-600)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 View Full Breakdown <ChevronRight size={14} />
               </Link>
@@ -503,6 +524,14 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </div>
         </Card>
+
+        {/* Verified Credential Modal */}
+        <ReadinessCertificateModal
+          isOpen={isCertModalOpen}
+          onClose={() => setIsCertModalOpen(false)}
+          user={user}
+          assessment={latestAssessment}
+        />
       </div>
     );
   }
