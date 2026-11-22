@@ -1,75 +1,90 @@
 /**
  * Mentorship API
+ *
+ * URL corrections vs. the old file:
+ *   getMentors()              → GET  /api/mentors                    (was missing /api prefix)
+ *   getMentorsPending()       → GET  /api/mentors/all                (new — admin only)
+ *   getRequestsForMentee()    → GET  /api/mentorship-requests/me     (was wrong path)
+ *   getRequestsForMentor()    → GET  /api/mentorship-requests/incoming (was nonexistent path)
+ *   sendRequest()             → POST /api/mentorship-requests        (was wrong path)
+ *   updateRequestStatus()     → PATCH /api/mentorship-requests/{id}  (was wrong path)
+ *   verifyMentor()            → PATCH /api/mentors/{id}/verify       (new — admin only)
+ *
+ * Mock fallback has been REMOVED. Errors propagate so callers can show real
+ * error UI instead of silently serving stale mock data.
  */
 import { apiClient } from './client';
 import { Mentor, MentorshipRequest, MentorshipStatusEnum } from '../types';
-import { MOCK_MENTORS, MOCK_MENTORSHIP_REQUESTS, MOCK_USERS } from '../data/mockData';
-
-let localMentors = [...MOCK_MENTORS];
-let localRequests = [...MOCK_MENTORSHIP_REQUESTS];
 
 export const mentorshipApi = {
-  async getMentors(): Promise<Mentor[]> {
-    try {
-      const res = await apiClient.get<Mentor[]>('/mentors');
-      return res.data;
-    } catch {
-      return localMentors;
-    }
+  /**
+   * List verified mentors. Optionally filter by expertise substring.
+   * Requires auth. Available to all roles.
+   */
+  async getMentors(expertise?: string): Promise<Mentor[]> {
+    const params = expertise ? { expertise } : undefined;
+    const res = await apiClient.get<Mentor[]>('/api/mentors', { params });
+    return res.data;
   },
 
-  async getRequestsForMentee(menteeId: number): Promise<MentorshipRequest[]> {
-    try {
-      const res = await apiClient.get<MentorshipRequest[]>(`/mentorship/requests/mentee/${menteeId}`);
-      return res.data;
-    } catch {
-      return localRequests.filter((r) => r.mentee_id === menteeId);
-    }
+  /**
+   * List ALL mentors (verified + unverified) for admin dashboard.
+   * Requires admin role.
+   */
+  async getMentorsPending(): Promise<Mentor[]> {
+    const res = await apiClient.get<Mentor[]>('/api/mentors/all');
+    return res.data;
   },
 
-  async getRequestsForMentor(mentorId: number): Promise<MentorshipRequest[]> {
-    try {
-      const res = await apiClient.get<MentorshipRequest[]>(`/mentorship/requests/mentor/${mentorId}`);
-      return res.data;
-    } catch {
-      return localRequests.filter((r) => r.mentor_id === mentorId);
-    }
+  /**
+   * Get all mentorship requests that the current authenticated user sent
+   * (mentee perspective). Sorted newest-first.
+   */
+  async getRequestsForMentee(): Promise<MentorshipRequest[]> {
+    const res = await apiClient.get<MentorshipRequest[]>('/api/mentorship-requests/me');
+    return res.data;
   },
 
-  async sendRequest(menteeId: number, mentorId: number): Promise<MentorshipRequest> {
-    try {
-      const res = await apiClient.post<MentorshipRequest>('/mentorship/requests', {
-        mentor_id: mentorId,
-      });
-      return res.data;
-    } catch {
-      const mentor = localMentors.find((m) => m.mentor_id === mentorId);
-      const mentee = MOCK_USERS.find((u) => u.user_id === menteeId);
-      const newReq: MentorshipRequest = {
-        request_id: Date.now(),
-        mentee_id: menteeId,
-        mentor_id: mentorId,
-        status: 'pending',
-        requested_at: new Date().toISOString(),
-        mentor,
-        mentee,
-      };
-      localRequests.unshift(newReq);
-      return newReq;
-    }
+  /**
+   * Get incoming mentorship requests directed at the current authenticated
+   * user's mentor profile (mentor perspective). Sorted newest-first.
+   */
+  async getRequestsForMentor(): Promise<MentorshipRequest[]> {
+    const res = await apiClient.get<MentorshipRequest[]>('/api/mentorship-requests/incoming');
+    return res.data;
   },
 
-  async updateRequestStatus(requestId: number, status: MentorshipStatusEnum): Promise<MentorshipRequest> {
-    try {
-      const res = await apiClient.patch<MentorshipRequest>(`/mentorship/requests/${requestId}`, { status });
-      return res.data;
-    } catch {
-      const req = localRequests.find((r) => r.request_id === requestId);
-      if (req) {
-        req.status = status;
-        return { ...req };
-      }
-      throw new Error('Request not found');
-    }
+  /**
+   * Send a mentorship request to a verified mentor.
+   * The backend derives the mentee_id from the JWT — no need to pass it.
+   */
+  async sendRequest(mentorId: number): Promise<MentorshipRequest> {
+    const res = await apiClient.post<MentorshipRequest>('/api/mentorship-requests', {
+      mentor_id: mentorId,
+    });
+    return res.data;
+  },
+
+  /**
+   * Update the status of a mentorship request (accept / decline / complete).
+   * Only the receiving mentor or an admin can call this.
+   */
+  async updateRequestStatus(
+    requestId: number,
+    newStatus: MentorshipStatusEnum,
+  ): Promise<MentorshipRequest> {
+    const res = await apiClient.patch<MentorshipRequest>(
+      `/api/mentorship-requests/${requestId}`,
+      { status: newStatus },
+    );
+    return res.data;
+  },
+
+  /**
+   * Admin-only: set a mentor profile's is_verified flag to true.
+   */
+  async verifyMentor(mentorId: number): Promise<Mentor> {
+    const res = await apiClient.patch<Mentor>(`/api/mentors/${mentorId}/verify`);
+    return res.data;
   },
 };

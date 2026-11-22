@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { recommendationsApi } from '../../api/recommendations';
 import { Recommendation, RecommendationStatusEnum } from '../../types';
@@ -8,41 +8,84 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
+import {
+  BookOpen,
+  Clock,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Bookmark,
+  Target,
+} from 'lucide-react';
 
 export const RecommendationsPage: React.FC = () => {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const loadRecs = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await recommendationsApi.getRecommendations(user.user_id);
+      setRecommendations(data);
+      setIsDemoMode(recommendationsApi.isDemoMode);
+    } catch (err) {
+      setRecommendations([]);
+      setIsDemoMode(true);
+      setErrorMessage(err instanceof Error ? err.message : 'Unable to load recommendations.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (!user) return;
-    const loadRecs = async () => {
-      setIsLoading(true);
-      try {
-        const data = await recommendationsApi.getRecommendations(user.user_id);
-        setRecommendations(data);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadRecs();
-  }, [user]);
+  }, [loadRecs]);
+
+  const handleGenerate = async () => {
+    if (!user) return;
+    setIsGenerating(true);
+    setErrorMessage(null);
+    try {
+      const result = await recommendationsApi.generateRecommendations();
+      setRecommendations(result.recommendations.length ? result.recommendations : []);
+      setIsDemoMode(false);
+      if (!result.recommendations.length) {
+        setErrorMessage(result.message || 'No recommendations were generated.');
+      }
+    } catch (err) {
+      setRecommendations([]);
+      setIsDemoMode(recommendationsApi.isDemoMode);
+      setErrorMessage(err instanceof Error ? err.message : 'Could not generate recommendations from the live backend.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleStatusChange = async (recId: number, newStatus: RecommendationStatusEnum) => {
     try {
       const updated = await recommendationsApi.updateStatus(recId, newStatus);
-      setRecommendations(recommendations.map((r) => (r.recommendation_id === recId ? updated : r)));
+      setRecommendations((prev) =>
+        prev.map((r) => (r.recommendation_id === recId ? { ...r, ...updated } : r))
+      );
+      setErrorMessage(null);
     } catch (err) {
       console.error(err);
+      setErrorMessage(err instanceof Error ? err.message : 'This status update could not be confirmed by the backend.');
     }
   };
 
   const getMatchLabel = (score?: number | null) => {
     if (!score) return { text: 'Curated', variant: 'neutral' as const };
-    if (score >= 90) return { text: '⭐ Strong Match', variant: 'primary' as const };
-    if (score >= 75) return { text: '✓ Good Match', variant: 'accent' as const };
-    return { text: 'Relevant', variant: 'neutral' as const };
+    if (score >= 90) return { text: `${score.toFixed(0)}% Strong Match`, variant: 'primary' as const };
+    if (score >= 75) return { text: `${score.toFixed(0)}% Good Match`, variant: 'accent' as const };
+    return { text: `${score.toFixed(0)}% Relevant`, variant: 'neutral' as const };
   };
 
   const filtered = recommendations.filter((r) => {
@@ -53,82 +96,120 @@ export const RecommendationsPage: React.FC = () => {
   return (
     <div>
       <PageTitle
-        title="Learning & Course Recommendations"
-        description="Curated high-impact learning pathways specifically addressing your identified skill gaps."
+        title="Targeted Learning & Course Roadmaps"
+        description="High-impact learning courses directly mapped to bridge your identified skill gaps and accelerate role readiness."
       />
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
-        {['all', 'pending', 'viewed', 'enrolled', 'completed'].map((st) => (
-          <button
-            key={st}
-            onClick={() => setFilterStatus(st)}
-            style={{
-              padding: 'var(--space-2) var(--space-4)',
-              borderRadius: 'var(--radius-full)',
-              border: `1px solid ${filterStatus === st ? 'var(--color-primary-500)' : 'var(--color-gray-300)'}`,
-              backgroundColor: filterStatus === st ? 'var(--color-primary-50)' : 'var(--color-white)',
-              color: filterStatus === st ? 'var(--color-primary-700)' : 'var(--color-gray-600)',
-              fontWeight: filterStatus === st ? '600' : 'normal',
-              cursor: 'pointer',
-              fontSize: 'var(--font-size-sm)',
-              textTransform: 'capitalize',
-            }}
-          >
-            {st === 'all' ? 'All Recommendations' : st}
-          </button>
-        ))}
+      {isDemoMode && (
+        <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', color: 'var(--color-warning-700)' }}>
+          Demo/offline mode: showing sample course recommendations from the mock catalogue. Live recommendation generation requires a working backend.
+        </div>
+      )}
+
+      {errorMessage && (
+        <div style={{ marginBottom: 'var(--space-6)', padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--color-red-700)' }}>
+          {errorMessage}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: 'var(--space-6)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          {(['all', 'pending', 'viewed', 'enrolled', 'completed'] as const).map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilterStatus(st)}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 'var(--radius-full)',
+                border: '1.5px solid',
+                borderColor: filterStatus === st ? 'var(--color-primary-500)' : 'var(--color-gray-200)',
+                backgroundColor: filterStatus === st ? 'var(--color-primary-50)' : 'var(--color-white)',
+                color: filterStatus === st ? 'var(--color-primary-700)' : 'var(--color-gray-600)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '13px',
+                textTransform: 'capitalize',
+                transition: 'all var(--transition-fast)',
+                boxShadow: filterStatus === st ? 'var(--shadow-xs)' : 'none',
+              }}
+            >
+              {st === 'all' ? 'All Roadmaps' : st}
+            </button>
+          ))}
+        </div>
+
+        <Button variant="primary" size="sm" onClick={handleGenerate} disabled={isGenerating || !user}>
+          {isGenerating ? 'Generating...' : 'Generate from latest assessment'}
+        </Button>
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-12)' }}>
-          <Spinner size="lg" />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-16)' }}>
+          <Spinner size="lg" color="var(--color-primary-500)" />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          title="No courses in this filter"
-          description="Try switching your status filter or run a new assessment to refresh your recommendations."
-          icon="🎓"
+          title="No recommendations yet"
+          description="Run a latest assessment or generate a fresh recommendation set to populate your course roadmap."
+          icon={<BookOpen size={28} />}
         />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-6)' }}>
           {filtered.map((rec) => {
             const match = getMatchLabel(rec.match_score);
+            const course = rec.course ?? {
+              title: rec.course_title || 'Course recommendation',
+              provider: rec.course_provider || 'WEIS Learning',
+              url: rec.course_url || null,
+              duration_hours: null as number | null,
+              skill: rec.skill_name ? { skill_name: rec.skill_name } : undefined,
+            };
             return (
-              <Card key={rec.recommendation_id} padding="lg" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <Card key={rec.recommendation_id} padding="lg" variant="glass" hoverEffect style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                    <Badge variant={match.variant} size="sm">
+                    <Badge variant={match.variant} size="sm" hasDot>
                       {match.text}
                     </Badge>
-                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
-                      Addresses: <strong>{rec.course?.skill?.skill_name}</strong>
+                    <span style={{ fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 600 }}>
+                      Skill gap: <strong style={{ color: 'var(--color-gray-800)' }}>{rec.skill_name || course.skill?.skill_name || 'Skill mapping unavailable'}</strong>
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-2)', lineHeight: 1.3 }}>
-                    {rec.course?.title}
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginBottom: 'var(--space-2)', lineHeight: 1.4 }}>
+                    {course.title}
                   </h3>
 
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)', marginBottom: 'var(--space-4)' }}>
-                    <div>Provider: <strong>{rec.course?.provider || 'Platform Partner'}</strong></div>
-                    <div>Estimated Duration: <strong>{rec.course?.duration_hours || 15} hours</strong></div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginBottom: 'var(--space-5)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <BookOpen size={13} style={{ color: 'var(--color-primary-500)' }} />
+                      <strong>{course.provider || 'WEIS Learning'}</strong>
+                    </span>
+                    <span>•</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Clock size={13} style={{ color: 'var(--color-accent-500)' }} />
+                      <strong>{course.duration_hours || 12} hrs</strong>
+                    </span>
                   </div>
                 </div>
 
                 <div style={{ borderTop: '1px solid var(--color-gray-100)', paddingTop: 'var(--space-4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>Current Status:</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-gray-500)', textTransform: 'uppercase' }}>
+                      Status:
+                    </span>
                     <select
                       value={rec.status}
                       onChange={(e) => handleStatusChange(rec.recommendation_id, e.target.value as RecommendationStatusEnum)}
                       style={{
-                        padding: '4px 8px',
-                        fontSize: 'var(--font-size-xs)',
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        fontWeight: 600,
                         borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--color-gray-300)',
                         backgroundColor: 'var(--color-gray-50)',
                         cursor: 'pointer',
+                        color: 'var(--color-gray-800)',
                       }}
                     >
                       <option value="pending">Pending</option>
@@ -138,15 +219,16 @@ export const RecommendationsPage: React.FC = () => {
                     </select>
                   </div>
 
-                  {rec.course?.url && (
+                  {course.url && (
                     <a
-                      href={rec.course.url}
+                      href={course.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ textDecoration: 'none' }}
                     >
-                      <Button variant="primary" size="sm" style={{ width: '100%' }}>
-                        Open Course Content ↗
+                      <Button variant={rec.status === 'enrolled' ? 'primary' : 'outline'} size="sm" style={{ width: '100%' }}>
+                        <span>Open Course Resource</span>
+                        <ExternalLink size={14} />
                       </Button>
                     </a>
                   )}

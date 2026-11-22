@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -6,6 +7,7 @@ export interface ModalProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -14,13 +16,20 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   footer,
+  maxWidth = '560px',
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -31,30 +40,32 @@ export const Modal: React.FC<ModalProps> = ({
       aria-modal="true"
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(17, 24, 39, 0.6)',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.55)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 'var(--z-modal)',
         padding: 'var(--space-4)',
+        animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={onClose}
     >
       <div
         style={{
           backgroundColor: 'var(--color-white)',
-          borderRadius: 'var(--radius-xl)',
+          borderRadius: 'var(--radius-2xl)',
           boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--color-gray-200)',
           width: '100%',
-          maxWidth: '540px',
+          maxWidth,
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          animation: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -64,46 +75,72 @@ export const Modal: React.FC<ModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: 'var(--space-4) var(--space-6)',
-            borderBottom: '1px solid var(--color-gray-200)',
+            padding: 'var(--space-5) var(--space-6)',
+            borderBottom: '1px solid var(--color-gray-100)',
+            backgroundColor: 'var(--color-warm-bg)',
           }}
         >
-          <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-gray-900)' }}>
+          <h2
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              fontWeight: 700,
+              color: 'var(--color-gray-900)',
+              fontFamily: "'Plus Jakarta Sans', var(--font-family)",
+              letterSpacing: '-0.02em',
+            }}
+          >
             {title}
-          </h3>
+          </h2>
           <button
             onClick={onClose}
-            aria-label="Close dialog"
             style={{
               background: 'none',
               border: 'none',
-              fontSize: 'var(--font-size-2xl)',
-              color: 'var(--color-gray-500)',
               cursor: 'pointer',
-              lineHeight: 1,
-              padding: 'var(--space-1)',
+              color: 'var(--color-gray-400)',
+              padding: '6px',
+              borderRadius: 'var(--radius-full)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all var(--transition-fast)',
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-gray-200)';
+              e.currentTarget.style.color = 'var(--color-gray-700)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--color-gray-400)';
+            }}
+            aria-label="Close dialog"
           >
-            &times;
+            <X size={18} />
           </button>
         </div>
 
-        {/* Content */}
-        <div style={{ padding: 'var(--space-6)', overflowY: 'auto', flex: 1 }}>
+        {/* Scrollable Body */}
+        <div
+          style={{
+            padding: 'var(--space-6)',
+            overflowY: 'auto',
+            flex: 1,
+            lineHeight: 1.6,
+          }}
+        >
           {children}
         </div>
 
-        {/* Footer */}
+        {/* Optional Footer */}
         {footer && (
           <div
             style={{
+              padding: 'var(--space-4) var(--space-6)',
+              borderTop: '1px solid var(--color-gray-100)',
+              backgroundColor: 'var(--color-gray-50)',
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'flex-end',
               gap: 'var(--space-3)',
-              padding: 'var(--space-4) var(--space-6)',
-              borderTop: '1px solid var(--color-gray-200)',
-              backgroundColor: 'var(--color-gray-50)',
             }}
           >
             {footer}

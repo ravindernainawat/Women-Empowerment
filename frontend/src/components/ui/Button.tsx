@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'safety';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'safety' | 'coral' | 'gradient';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -20,21 +20,22 @@ export const Button: React.FC<ButtonProps> = ({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: 'var(--font-weight-medium)' as any,
+    fontWeight: 600,
     borderRadius: 'var(--radius-md)',
     border: '1px solid transparent',
     cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
     opacity: disabled || isLoading ? 0.65 : 1,
     transition: 'all var(--transition-fast)',
     textDecoration: 'none',
-    fontFamily: 'inherit',
+    fontFamily: "'Plus Jakarta Sans', var(--font-family)",
     gap: 'var(--space-2)',
+    boxShadow: variant === 'primary' || variant === 'gradient' ? 'var(--shadow-sm)' : 'none',
   };
 
   const sizeStyles: Record<string, React.CSSProperties> = {
-    sm: { padding: 'var(--space-1) var(--space-3)', fontSize: 'var(--font-size-sm)' },
-    md: { padding: 'var(--space-2) var(--space-4)', fontSize: 'var(--font-size-base)' },
-    lg: { padding: 'var(--space-3) var(--space-6)', fontSize: 'var(--font-size-lg)' },
+    sm: { padding: '6px 14px', fontSize: 'var(--font-size-xs)' },
+    md: { padding: '9px 18px', fontSize: 'var(--font-size-sm)' },
+    lg: { padding: '12px 24px', fontSize: 'var(--font-size-base)' },
   };
 
   const variantStyles: Record<string, React.CSSProperties> = {
@@ -50,8 +51,8 @@ export const Button: React.FC<ButtonProps> = ({
     },
     outline: {
       backgroundColor: 'transparent',
-      color: 'var(--color-primary-500)',
-      borderColor: 'var(--color-primary-500)',
+      color: 'var(--color-primary-600)',
+      borderColor: 'var(--color-primary-200)',
     },
     danger: {
       backgroundColor: 'var(--color-error)',
@@ -68,10 +69,22 @@ export const Button: React.FC<ButtonProps> = ({
       color: 'var(--color-white)',
       borderColor: 'var(--color-safety-500)',
     },
+    coral: {
+      backgroundColor: 'var(--color-coral-500)',
+      color: 'var(--color-white)',
+      borderColor: 'var(--color-coral-500)',
+    },
+    gradient: {
+      background: 'var(--gradient-hero)',
+      color: 'var(--color-white)',
+      borderColor: 'transparent',
+      boxShadow: 'var(--shadow-glow)',
+    },
   };
 
   return (
     <button
+      className={`weis-button ${className}`}
       style={{
         ...baseStyles,
         ...sizeStyles[size],
@@ -92,6 +105,7 @@ export const Button: React.FC<ButtonProps> = ({
             display: 'inline-block',
             animation: 'spin 0.75s linear infinite',
           }}
+          aria-hidden="true"
         />
       )}
       {children}

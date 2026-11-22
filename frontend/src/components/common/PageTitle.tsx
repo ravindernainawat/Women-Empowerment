@@ -16,22 +16,32 @@ export const PageTitle: React.FC<PageTitleProps> = ({ title, description, action
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 'var(--space-4)',
-        marginBottom: 'var(--space-6)',
+        marginBottom: 'var(--space-8)',
       }}
     >
       <div>
         <h1
           style={{
-            fontSize: 'var(--font-size-3xl)',
-            fontWeight: 'var(--font-weight-bold)',
+            fontSize: 'clamp(1.75rem, 3vw, 2.25rem)',
+            fontWeight: 800,
             color: 'var(--color-gray-900)',
-            marginBottom: description ? 'var(--space-1)' : 0,
+            fontFamily: "'Plus Jakarta Sans', var(--font-family)",
+            letterSpacing: '-0.025em',
+            lineHeight: 1.25,
+            marginBottom: description ? 'var(--space-1-5)' : 0,
           }}
         >
           {title}
         </h1>
         {description && (
-          <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-base)', maxWidth: '640px' }}>
+          <p
+            style={{
+              color: 'var(--color-gray-600)',
+              fontSize: 'var(--font-size-sm)',
+              maxWidth: '680px',
+              lineHeight: 1.6,
+            }}
+          >
             {description}
           </p>
         )}

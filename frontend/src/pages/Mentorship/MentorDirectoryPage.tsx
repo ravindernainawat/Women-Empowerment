@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { mentorshipApi } from '../../api/mentorship';
 import { Mentor } from '../../types';
@@ -8,172 +8,303 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { ErrorState } from '../../components/ui/ErrorState';
+import { Input } from '../../components/ui/Input';
+import {
+  Users,
+  CheckCircle2,
+  MapPin,
+  Briefcase,
+  Search,
+  Send,
+  X,
+  HeartHandshake,
+} from 'lucide-react';
 
 export const MentorDirectoryPage: React.FC = () => {
   const { user } = useAuth();
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Request Mentorship Modal State
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  const loadMentors = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await mentorshipApi.getMentors();
+      setMentors(data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load mentors.';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadMentors = async () => {
-      setIsLoading(true);
-      try {
-        const data = await mentorshipApi.getMentors();
-        setMentors(data);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadMentors();
-  }, []);
+  }, [loadMentors]);
 
   const handleSendRequest = async () => {
     if (!user || !selectedMentor) return;
     setIsSubmitting(true);
+    setRequestError(null);
     try {
-      await mentorshipApi.sendRequest(user.user_id, selectedMentor.mentor_id);
-      setSuccessMessage(`Mentorship request successfully sent to ${selectedMentor.user?.full_name}. You can track status under "My Requests".`);
+      await mentorshipApi.sendRequest(selectedMentor.mentor_id);
+      // Backend returns flat full_name; fall back to nested user for mock data.
+      const mentorName =
+        selectedMentor.full_name ?? selectedMentor.user?.full_name ?? 'this mentor';
+      setSuccessMessage(
+        `Mentorship inquiry successfully sent to ${mentorName}. You can track the response under "My Requests".`
+      );
       setSelectedMentor(null);
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        ?? (err instanceof Error ? err.message : 'Failed to send request. Please try again.');
+      setRequestError(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Backend already filters is_verified=True; client-side filter is for search only.
+  const filteredMentors = mentors.filter((m) => {
+    // Mentor name may come from flat full_name (API) or nested user (mock).
+    const name = (m.full_name ?? m.user?.full_name ?? '').toLowerCase();
+    const exp = (m.expertise_area || '').toLowerCase();
+    const loc = (m.user?.location ?? '').toLowerCase();
+    const q = searchQuery.toLowerCase();
+    return name.includes(q) || exp.includes(q) || loc.includes(q);
+  });
+
   return (
     <div>
       <PageTitle
-        title="Verified Mentor Directory"
-        description="Connect 1-on-1 with vetted women leaders and experienced professionals across technology, leadership, and entrepreneurship."
+        title="Verified Mentorship Network"
+        description="Connect 1-on-1 with vetted industry leaders, senior engineers, and executives dedicated to supporting women across tech."
       />
 
       {successMessage && (
         <div
           role="status"
           style={{
-            padding: 'var(--space-4)',
+            padding: '14px 18px',
             backgroundColor: 'var(--color-success-light)',
             color: 'var(--color-success)',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-xl)',
             border: '1px solid #bbf7d0',
             marginBottom: 'var(--space-6)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          <span>{successMessage}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
+            <CheckCircle2 size={18} />
+            <span>{successMessage}</span>
+          </div>
           <button
             onClick={() => setSuccessMessage(null)}
-            style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ background: 'none', border: 'none', color: 'currentColor', cursor: 'pointer', padding: '4px' }}
+            aria-label="Dismiss message"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
       )}
 
-      {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-12)' }}>
-          <Spinner size="lg" />
+      {/* Search Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 'var(--space-4)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: '340px' }}>
+          <Input
+            placeholder="Search by name, expertise, or city..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search size={16} />}
+          />
         </div>
+
+        <Badge variant="verified" size="sm" hasDot>
+          {filteredMentors.length} Verified Mentors Available
+        </Badge>
+      </div>
+
+      {isLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-16)' }}>
+          <Spinner size="lg" color="var(--color-primary-500)" />
+        </div>
+      ) : error ? (
+        <ErrorState
+          title="Could not load mentors"
+          message={error}
+          onRetry={loadMentors}
+        />
+      ) : filteredMentors.length === 0 ? (
+        <EmptyState
+          title="No verified mentors match your search"
+          description="Try broadening your search query or check back soon as new mentors are vetted weekly."
+          icon={<Users size={28} />}
+        />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-6)' }}>
-          {mentors
-            .filter((m) => m.is_verified) // Only display verified mentors publicly (PRD requirement)
-            .map((mentor) => (
-              <Card key={mentor.mentor_id} padding="lg" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          {filteredMentors.map((mentor) => {
+            // Backend returns flat full_name; fall back to nested user for mock data.
+            const displayName = mentor.full_name ?? mentor.user?.full_name ?? 'Mentor';
+            const initials = displayName
+              .split(' ')
+              .map((n: string) => n[0])
+              .slice(0, 2)
+              .join('');
+
+            return (
+              <Card key={mentor.mentor_id} padding="lg" variant="glass" hoverEffect style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-4)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      {/* Mentor Avatar */}
                       <div
                         style={{
-                          width: '44px',
-                          height: '44px',
-                          borderRadius: '50%',
-                          backgroundColor: 'var(--color-primary-100)',
-                          color: 'var(--color-primary-800)',
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: 'var(--radius-full)',
+                          background: 'var(--gradient-accent)',
+                          color: 'white',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontWeight: 'bold',
-                          fontSize: 'var(--font-size-lg)',
+                          fontWeight: 800,
+                          fontSize: '16px',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
-                        {mentor.user?.full_name?.charAt(0) || 'M'}
+                        {initials || 'M'}
                       </div>
                       <div>
-                        <h3 style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-gray-900)' }}>
-                          {mentor.user?.full_name}
+                        <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+                          {displayName}
                         </h3>
-                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
-                          {mentor.user?.location || 'India'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--color-gray-500)' }}>
+                          <MapPin size={12} /> {mentor.user?.location || 'Remote / Hybrid'}
+                        </div>
                       </div>
                     </div>
 
-                    <Badge variant="success" size="sm">
-                      ✓ Verified
+                    <Badge variant="verified" size="sm" hasDot>
+                      Verified
                     </Badge>
                   </div>
 
-                  <div style={{ marginBottom: 'var(--space-3)' }}>
-                    <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary-700)', textTransform: 'uppercase' }}>
-                      Expertise Area
-                    </span>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-800)', fontWeight: '500' }}>
-                      {mentor.expertise_area || 'General Career Guidance'}
-                    </p>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--color-primary-50)', color: 'var(--color-primary-700)', fontSize: '12px', fontWeight: 600, marginBottom: 'var(--space-3)' }}>
+                    <Briefcase size={12} />
+                    <span>{mentor.expertise_area}</span>
                   </div>
 
-                  <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-                    {mentor.bio}
+                  <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-600)', lineHeight: 1.6, marginBottom: 'var(--space-5)' }}>
+                    {mentor.bio || 'Experienced technologist committed to empowering the next generation of women developers.'}
                   </p>
                 </div>
 
                 <div style={{ borderTop: '1px solid var(--color-gray-100)', paddingTop: 'var(--space-4)' }}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    style={{ width: '100%' }}
-                    onClick={() => setSelectedMentor(mentor)}
-                  >
-                    Request Mentorship Connection
-                  </Button>
+                  {user?.role === 'mentee' ? (
+                    <Button
+                      variant="gradient"
+                      size="sm"
+                      style={{ width: '100%' }}
+                      onClick={() => setSelectedMentor(mentor)}
+                    >
+                      <HeartHandshake size={14} /> Request Mentorship Connection
+                    </Button>
+                  ) : (
+                    <Badge variant="neutral" size="sm" style={{ width: '100%', justifyContent: 'center' }}>
+                      Mentor Profile Active
+                    </Badge>
+                  )}
                 </div>
               </Card>
-            ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Confirmation Modal */}
+      {/* Request Mentorship Modal */}
       <Modal
         isOpen={!!selectedMentor}
-        onClose={() => setSelectedMentor(null)}
-        title="Confirm Mentorship Request"
+        onClose={() => { setSelectedMentor(null); setRequestError(null); }}
+        title={`Request Mentorship with ${selectedMentor?.full_name ?? selectedMentor?.user?.full_name}`}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setSelectedMentor(null)}>
+            <Button variant="ghost" onClick={() => { setSelectedMentor(null); setRequestError(null); }}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleSendRequest} isLoading={isSubmitting}>
-              Confirm & Send Request
+            <Button variant="gradient" onClick={handleSendRequest} isLoading={isSubmitting}>
+              <Send size={14} /> Confirm & Send Inquiry
             </Button>
           </>
         }
       >
-        <p style={{ color: 'var(--color-gray-700)', lineHeight: 1.6, marginBottom: 'var(--space-3)' }}>
-          You are requesting 1-on-1 mentorship with <strong>{selectedMentor?.user?.full_name}</strong> in the
-          domain of <em>{selectedMentor?.expertise_area}</em>.
-        </p>
-        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
-          Once submitted, your profile will be shared with the mentor. The request enters "Pending" status and you will be notified upon confirmation.
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)', lineHeight: 1.6 }}>
+            You are requesting a 1-on-1 mentorship partnership with{' '}
+            <strong style={{ color: 'var(--color-gray-900)' }}>
+              {selectedMentor?.full_name ?? selectedMentor?.user?.full_name}
+            </strong>{' '}
+            ({selectedMentor?.expertise_area}).
+          </p>
+
+          {requestError && (
+            <div
+              role="alert"
+              style={{
+                padding: '10px 14px',
+                backgroundColor: 'var(--color-error-light, #fee2e2)',
+                color: 'var(--color-error)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid #fca5a5',
+                fontSize: 'var(--font-size-sm)',
+              }}
+            >
+              {requestError}
+            </div>
+          )}
+
+          <div
+            style={{
+              padding: 'var(--space-4)',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--color-warm-bg)',
+              border: '1px solid var(--color-gray-200)',
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-gray-700)',
+              lineHeight: 1.6,
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: '4px', color: 'var(--color-primary-700)' }}>
+              🤝 Sisterhood Mentorship Charter:
+            </div>
+            • Mentors provide free, dedicated guidance aligned with UN SDG 5.<br />
+            • Inquiries are reviewed within 48-72 hours.<br />
+            • All communication follows platform professional conduct standards.
+          </div>
+        </div>
       </Modal>
     </div>
   );

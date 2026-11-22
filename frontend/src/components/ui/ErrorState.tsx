@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from './Button';
+import { AlertCircle } from 'lucide-react';
 
 export interface ErrorStateProps {
   title?: string;
@@ -9,7 +10,7 @@ export interface ErrorStateProps {
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
   title = 'Something went wrong',
-  message = 'We encountered an error while loading this information. Please try again.',
+  message = 'We encountered an issue while retrieving this information. Please try again.',
   onRetry,
 }) => {
   return (
@@ -20,19 +21,50 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 'var(--space-8) var(--space-4)',
+        padding: 'var(--space-8) var(--space-6)',
         textAlign: 'center',
         backgroundColor: 'var(--color-error-light)',
-        borderRadius: 'var(--radius-lg)',
+        borderRadius: 'var(--radius-xl)',
         border: '1px solid #fecaca',
-        color: 'var(--color-error)',
       }}
     >
-      <span style={{ fontSize: '2.5rem', marginBottom: 'var(--space-3)' }}>⚠️</span>
-      <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', marginBottom: 'var(--space-1)' }}>
+      <div
+        style={{
+          width: '52px',
+          height: '52px',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--color-error)',
+          marginBottom: 'var(--space-3)',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
+        <AlertCircle size={26} />
+      </div>
+
+      <h3
+        style={{
+          fontSize: 'var(--font-size-base)',
+          fontWeight: 700,
+          color: 'var(--color-gray-900)',
+          marginBottom: 'var(--space-1)',
+          fontFamily: "'Plus Jakarta Sans', var(--font-family)",
+        }}
+      >
         {title}
       </h3>
-      <p style={{ fontSize: 'var(--font-size-sm)', maxWidth: '400px', marginBottom: onRetry ? 'var(--space-4)' : 0, color: 'var(--color-gray-700)' }}>
+      <p
+        style={{
+          fontSize: 'var(--font-size-sm)',
+          maxWidth: '400px',
+          lineHeight: 1.5,
+          marginBottom: onRetry ? 'var(--space-4)' : 0,
+          color: 'var(--color-gray-600)',
+        }}
+      >
         {message}
       </p>
       {onRetry && (

@@ -1,7 +1,7 @@
 /* ===================================================
-   WEIS Global Styles
+   WEIS Creative Premium Global Styles
    =================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import './variables.css';
 
 *, *::before, *::after {
@@ -21,46 +21,51 @@ body {
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--color-gray-800);
-  background-color: var(--color-gray-50);
+  background-color: var(--color-warm-bg);
+  background-image: var(--gradient-mesh);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-/* --- Heading scale --- */
-h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+/* --- Heading Scale with Display Typography --- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', var(--font-family);
+  color: var(--color-gray-900);
+  letter-spacing: -0.025em;
+}
+
+h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-extrabold); line-height: var(--line-height-tight); }
 h2 { font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
-h3 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); }
+h3 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); }
 h4 { font-size: var(--font-size-xl);  font-weight: var(--font-weight-semibold); }
-h5 { font-size: var(--font-size-lg);  font-weight: var(--font-weight-medium); }
+h5 { font-size: var(--font-size-lg);  font-weight: var(--font-weight-semibold); }
 h6 { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); }
 
-p { line-height: var(--line-height-relaxed); }
+p {
+  line-height: var(--line-height-relaxed);
+  color: var(--color-gray-600);
+}
 
 a {
   color: var(--color-primary-500);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
-a:hover { color: var(--color-primary-600); text-decoration: underline; }
 
-/* --- Focus visible (accessibility) --- */
+a:hover {
+  color: var(--color-primary-600);
+}
+
+/* --- Accessible Focus Rings --- */
 :focus-visible {
   outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
 
-/* --- Utility --- */
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
-
+/* --- Container & Utilities --- */
 .container {
   width: 100%;
   max-width: var(--content-max-width);
@@ -68,39 +73,93 @@ a:hover { color: var(--color-primary-600); text-decoration: underline; }
   padding: 0 var(--space-6);
 }
 
-/* --- Scrollbar (subtle) --- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-gray-100); }
-::-webkit-scrollbar-thumb { background: var(--color-gray-300); border-radius: var(--radius-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--color-gray-400); }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
-/* --- img / media --- */
-img, video { max-width: 100%; display: block; }
+/* --- Glassmorphism Bento Card Utility --- */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-xl);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
 
-/* --- Page layout helpers --- */
+.glass-panel:hover {
+  box-shadow: var(--glass-shadow-hover);
+}
+
+/* --- Sleek Scrollbar --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+/* --- App Layout Helpers --- */
 .page-wrapper {
   min-height: 100vh;
-}
-
-.app-layout {
   display: flex;
-  min-height: 100vh;
+  flex-direction: column;
 }
 
-.main-content {
+.app-layout-root {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--color-warm-bg);
+}
+
+.main-content-area {
   flex: 1;
   min-width: 0;
-  padding: var(--space-8);
   margin-left: var(--sidebar-width);
   margin-top: var(--navbar-height);
+  padding: var(--space-8);
+  max-width: var(--content-max-width);
   transition: margin-left var(--transition-normal);
 }
 
+@media (max-width: 1024px) {
+  .main-content-area {
+    padding: var(--space-6);
+  }
+}
+
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
+  .main-content-area {
+    margin-left: 0 !important;
     padding: var(--space-4);
   }
   h1 { font-size: var(--font-size-3xl); }
   h2 { font-size: var(--font-size-2xl); }
+}
+
+/* --- Accessibility: Prefers Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

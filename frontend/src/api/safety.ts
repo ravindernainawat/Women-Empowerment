@@ -1,12 +1,17 @@
 /**
- * Safety API
- * Handles incident reporting and report tracking with strict role sensitivity.
+ * Safety API — corrected paths and no mock fallback.
+ *
+ * Endpoints used:
+ *   getMyReports()           → GET  /api/safety-reports/me       (auth user's own reports)
+ *   getAllReports()           → GET  /api/safety-reports           (admin only)
+ *   submitReport(payload)    → POST /api/safety-reports           (any authenticated user)
+ *   updateReportStatus(…)    → PATCH /api/safety-reports/{id}     (admin only)
+ *
+ * user_id is derived from the JWT on the backend — never sent in the request body.
+ * Errors propagate so callers can show real error UI instead of silently serving stale mock data.
  */
 import { apiClient } from './client';
 import { SafetyReport, SafetyStatusEnum } from '../types';
-import { MOCK_SAFETY_REPORTS } from '../data/mockData';
-
-let localSafetyReports = [...MOCK_SAFETY_REPORTS];
 
 export interface CreateSafetyReportPayload {
   incident_type: string;
@@ -14,56 +19,37 @@ export interface CreateSafetyReportPayload {
 }
 
 export const safetyApi = {
-  async getMyReports(userId: number): Promise<SafetyReport[]> {
-    try {
-      const res = await apiClient.get<SafetyReport[]>(`/users/${userId}/safety-reports`);
-      return res.data;
-    } catch {
-      return localSafetyReports.filter((r) => r.user_id === userId);
-    }
+  /**
+   * Get the authenticated user's own safety reports, sorted newest-first.
+   * Backend derives user identity from JWT — no userId argument needed.
+   */
+  async getMyReports(): Promise<SafetyReport[]> {
+    const res = await apiClient.get<SafetyReport[]>('/api/safety-reports/me');
+    return res.data;
   },
 
-  async getAllReports(): Promise<SafetyReport[]> {
-    try {
-      const res = await apiClient.get<SafetyReport[]>('/admin/safety-reports');
-      return res.data;
-    } catch {
-      return localSafetyReports;
-    }
+  /**
+   * Admin-only: list all safety reports with optional status filter.
+   */
+  async getAllReports(status?: string): Promise<SafetyReport[]> {
+    const params = status && status !== 'all' ? { status } : undefined;
+    const res = await apiClient.get<SafetyReport[]>('/api/safety-reports', { params });
+    return res.data;
   },
 
-  async submitReport(userId: number, payload: CreateSafetyReportPayload): Promise<SafetyReport> {
-    try {
-      const res = await apiClient.post<SafetyReport>('/safety-reports', {
-        user_id: userId,
-        ...payload,
-      });
-      return res.data;
-    } catch {
-      const newReport: SafetyReport = {
-        report_id: Date.now(),
-        user_id: userId,
-        incident_type: payload.incident_type,
-        description: payload.description,
-        status: 'submitted',
-        reported_at: new Date().toISOString(),
-      };
-      localSafetyReports.unshift(newReport);
-      return newReport;
-    }
+  /**
+   * File a new safety report. user_id is derived from JWT on the backend.
+   */
+  async submitReport(payload: CreateSafetyReportPayload): Promise<SafetyReport> {
+    const res = await apiClient.post<SafetyReport>('/api/safety-reports', payload);
+    return res.data;
   },
 
+  /**
+   * Admin-only: update the status of a safety report.
+   */
   async updateReportStatus(reportId: number, status: SafetyStatusEnum): Promise<SafetyReport> {
-    try {
-      const res = await apiClient.patch<SafetyReport>(`/admin/safety-reports/${reportId}`, { status });
-      return res.data;
-    } catch {
-      const rep = localSafetyReports.find((r) => r.report_id === reportId);
-      if (rep) {
-        rep.status = status;
-        return { ...rep };
-      }
-      throw new Error('Report not found');
-    }
+    const res = await apiClient.patch<SafetyReport>(`/api/safety-reports/${reportId}`, { status });
+    return res.data;
   },
 };

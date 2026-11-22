@@ -44,8 +44,8 @@ def test_jwt_invalid_signature():
     data = {"sub": "123"}
     token = create_access_token(data)
     
-    # Tamper with the token
-    invalid_token = token[:-1] + ("0" if token[-1] != "0" else "1")
+    # Tamper with the token signature
+    invalid_token = token[:-4] + "xxxx"
     
     with pytest.raises(ValueError, match="Invalid or expired token"):
         decode_access_token(invalid_token)

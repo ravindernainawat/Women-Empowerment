@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -10,6 +11,7 @@ export const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,13 +28,12 @@ export const LoginPage: React.FC = () => {
       await login({ email, password });
       navigate('/dashboard');
     } catch {
-      setError('Invalid email or password. Please try again.');
+      setError('Invalid email or password. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Quick fill for testing different user journeys
   const handleQuickFill = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('demo1234');
@@ -41,26 +42,42 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div>
-      <h2 style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-1)' }}>
-        Welcome back
-      </h2>
-      <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-6)' }}>
-        Sign in to your WEIS account to continue your career journey.
-      </p>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <h2
+          style={{
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: 800,
+            color: 'var(--color-gray-900)',
+            fontFamily: "'Plus Jakarta Sans', var(--font-family)",
+            letterSpacing: '-0.025em',
+            marginBottom: 'var(--space-1)',
+          }}
+        >
+          Welcome Back
+        </h2>
+        <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-sm)' }}>
+          Sign in to your WEIS account to manage skills, mentorship, and goals.
+        </p>
+      </div>
 
       {error && (
         <div
           role="alert"
           style={{
-            padding: 'var(--space-3)',
+            padding: '12px 14px',
             backgroundColor: 'var(--color-error-light)',
             color: 'var(--color-error)',
             borderRadius: 'var(--radius-md)',
             fontSize: 'var(--font-size-sm)',
             marginBottom: 'var(--space-4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: '1px solid #fecaca',
           }}
         >
-          {error}
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
         </div>
       )}
 
@@ -71,45 +88,133 @@ export const LoginPage: React.FC = () => {
           placeholder="e.g. amina@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          leftIcon={<Mail size={18} />}
           required
         />
 
         <Input
           label="Password"
-          type="password"
-          placeholder="••••••••"
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          leftIcon={<Lock size={18} />}
+          rightIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--color-gray-400)',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          }
           required
         />
 
-        <Button type="submit" variant="primary" isLoading={isLoading} style={{ width: '100%', marginTop: 'var(--space-2)' }}>
+        <Button
+          type="submit"
+          variant="gradient"
+          size="lg"
+          isLoading={isLoading}
+          style={{ width: '100%', marginTop: 'var(--space-2)' }}
+        >
           Sign In
         </Button>
       </form>
 
-      {/* Demo Quick Fill buttons */}
-      <div style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px dashed var(--color-gray-200)' }}>
-        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginBottom: 'var(--space-2)', textAlign: 'center' }}>
-          Quick Demo Accounts:
-        </p>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <Button size="sm" variant="outline" onClick={() => handleQuickFill('amina@example.com')}>
-            Mentee
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => handleQuickFill('sunita.sharma@example.com')}>
-            Mentor
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => handleQuickFill('admin@weis.org')}>
-            Admin
-          </Button>
+      {/* Demo Quick Fill Buttons */}
+      <div
+        style={{
+          marginTop: 'var(--space-6)',
+          paddingTop: 'var(--space-5)',
+          borderTop: '1px dashed var(--color-gray-200)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            marginBottom: 'var(--space-3)',
+          }}
+        >
+          <Sparkles size={14} style={{ color: 'var(--color-accent-500)' }} />
+          <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--color-gray-500)' }}>
+            Quick Demo Auto-Fill:
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => handleQuickFill('amina@example.com')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: 'var(--color-primary-50)',
+              border: '1px solid var(--color-primary-200)',
+              color: 'var(--color-primary-700)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            Mentee (Amina)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickFill('sunita.sharma@example.com')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: 'var(--color-accent-50)',
+              border: '1px solid var(--color-accent-200)',
+              color: 'var(--color-accent-600)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            Mentor (Dr. Sunita)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickFill('admin@weis.org')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: 'var(--color-coral-50)',
+              border: '1px solid var(--color-coral-200)',
+              color: 'var(--color-coral-700)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            Admin Portal
+          </button>
         </div>
       </div>
 
-      <div style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)' }}>
-        Don't have an account yet?{' '}
-        <Link to="/register" style={{ fontWeight: 'bold' }}>
-          Create an account
+      <div style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--font-size-sm)' }}>
+        <span style={{ color: 'var(--color-gray-500)' }}>Don&apos;t have an account yet? </span>
+        <Link to="/register" style={{ fontWeight: 700, color: 'var(--color-primary-600)' }}>
+          Create an Account
         </Link>
       </div>
     </div>

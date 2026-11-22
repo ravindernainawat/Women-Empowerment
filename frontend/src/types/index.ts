@@ -89,6 +89,10 @@ export interface Recommendation {
   recommendation_id: number;
   user_id: number;
   course_id: number;
+  course_title?: string;
+  course_provider?: string | null;
+  course_url?: string | null;
+  skill_name?: string | null;
   match_score?: number | null;
   recommended_at?: string;
   status: RecommendationStatusEnum;
@@ -100,6 +104,8 @@ export interface Recommendation {
 export interface Mentor {
   mentor_id: number;
   user_id: number;
+  /** Flat field returned by MentorResponse schema (joined from users on the backend) */
+  full_name?: string;
   expertise_area?: string | null;
   bio?: string | null;
   is_verified: boolean;
@@ -114,7 +120,14 @@ export interface MentorshipRequest {
   mentor_id: number;
   status: MentorshipStatusEnum;
   requested_at?: string;
-  /** Joined entities */
+  /**
+   * Flat name strings returned directly by the backend API
+   * (MentorshipRequestResponse schema). These are the canonical fields
+   * when data comes from the real API.
+   */
+  mentee_name?: string;
+  mentor_name?: string;
+  /** Joined entities — populated only when using mock data or enriched client-side */
   mentor?: Mentor;
   mentee?: User;
 }

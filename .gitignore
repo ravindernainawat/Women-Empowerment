@@ -17,3 +17,7 @@ frontend/dist/
 
 # Logs
 *.log
+
+# Databases
+*.db
+*.sqlite3

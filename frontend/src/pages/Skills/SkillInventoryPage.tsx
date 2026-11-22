@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { skillsApi } from '../../api/skills';
@@ -8,14 +8,25 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Select';
+import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
+import {
+  Target,
+  Plus,
+  Trash2,
+  Zap,
+  Lightbulb,
+  Search,
+} from 'lucide-react';
 
 export const SkillInventoryPage: React.FC = () => {
   const { user } = useAuth();
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
 
   // Add Skill Modal
@@ -24,7 +35,7 @@ export const SkillInventoryPage: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<ProficiencyEnum>('beginner');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     try {
@@ -37,11 +48,11 @@ export const SkillInventoryPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [loadData]);
 
   const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +60,7 @@ export const SkillInventoryPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const added = await skillsApi.addUserSkill(user.user_id, Number(selectedSkillId), selectedLevel);
-      setUserSkills([...userSkills, added]);
+      setUserSkills((prev) => [...prev, added]);
       setIsModalOpen(false);
       setSelectedSkillId('');
       setSelectedLevel('beginner');
@@ -58,22 +69,32 @@ export const SkillInventoryPage: React.FC = () => {
     }
   };
 
-  const handleLevelChange = async (userSkillId: number, newLevel: ProficiencyEnum) => {
+  const handleLevelChange = async (skillId: number, newLevel: ProficiencyEnum) => {
     try {
-      const updated = await skillsApi.updateUserSkill(userSkillId, newLevel);
-      setUserSkills(userSkills.map((us) => (us.user_skill_id === userSkillId ? updated : us)));
+      const updated = await skillsApi.updateUserSkill(skillId, newLevel);
+      setUserSkills((prev) => prev.map((us) => (us.skill_id === skillId ? { ...us, proficiency_level: newLevel } : us)));
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDelete = async (userSkillId: number) => {
+  const handleDelete = async (skillId: number) => {
     if (!window.confirm('Remove this skill from your inventory?')) return;
-    await skillsApi.deleteUserSkill(userSkillId);
-    setUserSkills(userSkills.filter((us) => us.user_skill_id !== userSkillId));
+    await skillsApi.deleteUserSkill(skillId);
+    setUserSkills((prev) => prev.filter((us) => us.skill_id !== skillId));
   };
 
-  // Filter out already added skills for the dropdown
+  // Filter skills based on search & category
+  const filteredUserSkills = userSkills.filter((us) => {
+    const matchesSearch = us.skill?.skill_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'All' ||
+      (us.skill?.category && us.skill.category.toLowerCase() === selectedCategory.toLowerCase());
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ['All', 'Technical', 'Data', 'Design', 'Soft Skills'];
+
   const availableSkillsToAdd = allSkills.filter(
     (s) => !userSkills.some((us) => us.skill_id === s.skill_id)
   );
@@ -82,123 +103,228 @@ export const SkillInventoryPage: React.FC = () => {
     <div>
       <PageTitle
         title="My Skill Inventory"
-        description="Maintain a verified catalog of your technical competencies and soft skills. These form the baseline for role readiness assessments."
+        description="Maintain a verified catalog of your competencies and proficiencies to power personalized readiness gap analysis."
         action={
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-              + Log New Skill
+              <Plus size={16} /> Log New Skill
             </Button>
             {userSkills.length >= 3 && (
               <Link to="/assessment">
-                <Button variant="outline">⚡ Run Assessment →</Button>
+                <Button variant="gradient">
+                  <Zap size={16} /> Run Gap Assessment
+                </Button>
               </Link>
             )}
           </div>
         }
       />
 
-      {/* Guidance banner */}
+      {/* Tip Banner with Lucide Icon */}
       <div
         style={{
-          padding: 'var(--space-4)',
-          backgroundColor: 'var(--color-primary-50)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--color-primary-200)',
+          padding: 'var(--space-4) var(--space-5)',
+          background: 'linear-gradient(135deg, rgba(8,127,140,0.06) 0%, rgba(167,139,250,0.08) 100%)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--glass-border-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: 'var(--space-6)',
           flexWrap: 'wrap',
-          gap: 'var(--space-2)',
+          gap: 'var(--space-3)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ fontSize: '1.5rem' }}>💡</span>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: 'var(--color-primary-50)',
+              color: 'var(--color-primary-600)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Lightbulb size={18} />
+          </div>
           <div>
-            <h4 style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary-900)' }}>
-              Tip for accurate assessment
+            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+              Tip for accurate readiness scoring
             </h4>
-            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-primary-800)' }}>
-              Add at least 3 to 5 skills with honest proficiency levels before taking a role readiness assessment.
+            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-600)' }}>
+              Log at least 3 to 5 skills with realistic proficiency ratings before running an assessment against target roles.
             </p>
           </div>
         </div>
-        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary-700)' }}>
-          {userSkills.length} Skill{userSkills.length === 1 ? '' : 's'} Logged
-        </span>
+        <Badge variant="primary" size="sm" hasDot>
+          {userSkills.length} Logged Skills
+        </Badge>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 'var(--space-4)',
+          marginBottom: 'var(--space-6)',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: '1px solid',
+                borderColor: selectedCategory === cat ? 'var(--color-primary-500)' : 'var(--color-gray-200)',
+                backgroundColor: selectedCategory === cat ? 'var(--color-primary-50)' : 'var(--color-white)',
+                color: selectedCategory === cat ? 'var(--color-primary-700)' : 'var(--color-gray-600)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ width: '100%', maxWidth: '280px' }}>
+          <Input
+            placeholder="Search skills..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search size={16} />}
+          />
+        </div>
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-12)' }}>
-          <Spinner size="lg" />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-16)' }}>
+          <Spinner size="lg" color="var(--color-primary-500)" />
         </div>
-      ) : userSkills.length === 0 ? (
+      ) : filteredUserSkills.length === 0 ? (
         <EmptyState
-          title="No skills logged yet"
-          description="Log your existing technical, management, and soft skills to unlock tailored gap assessments and course recommendations."
-          actionLabel="Log Your First Skill"
-          onAction={() => setIsModalOpen(true)}
-          icon="🎯"
+          title={userSkills.length === 0 ? 'No skills logged yet' : 'No matching skills found'}
+          description={
+            userSkills.length === 0
+              ? 'Log your technical proficiencies to unlock customized gap scoring and course recommendations.'
+              : 'Try clearing your search query or selecting another category filter.'
+          }
+          actionLabel={userSkills.length === 0 ? 'Log Your First Skill' : 'Clear Filter'}
+          onAction={() => {
+            if (userSkills.length === 0) setIsModalOpen(true);
+            else {
+              setSearchQuery('');
+              setSelectedCategory('All');
+            }
+          }}
+          icon={<Target size={28} />}
         />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
-          {userSkills.map((us) => (
-            <Card key={us.user_skill_id} padding="md" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
-                  <Badge variant={us.skill?.category === 'Technical' ? 'primary' : 'neutral'} size="sm">
-                    {us.skill?.category || 'Skill'}
-                  </Badge>
-                  <button
-                    onClick={() => handleDelete(us.user_skill_id)}
-                    aria-label={`Remove ${us.skill?.skill_name}`}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--color-gray-400)',
-                      cursor: 'pointer',
-                      fontSize: 'var(--font-size-sm)',
-                    }}
-                    title="Remove Skill"
-                  >
-                    🗑️
-                  </button>
-                </div>
-                <h3 style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-4)' }}>
-                  {us.skill?.skill_name}
-                </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: 'var(--space-5)' }}>
+          {filteredUserSkills.map((us) => (
+            <Card key={us.user_skill_id} padding="md" variant="glass" hoverEffect>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-3)' }}>
+                <Badge variant={us.skill?.category === 'Technical' ? 'primary' : 'accent'} size="sm">
+                  {us.skill?.category || 'Skill'}
+                </Badge>
+                <button
+                  onClick={() => handleDelete(us.skill_id)}
+                  aria-label={`Remove ${us.skill?.skill_name}`}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-gray-400)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--color-error)';
+                    e.currentTarget.style.backgroundColor = 'var(--color-error-light)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--color-gray-400)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  title="Remove Skill"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
 
+              <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginBottom: 'var(--space-4)' }}>
+                {us.skill?.skill_name}
+              </h3>
+
               <div style={{ paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-gray-100)' }}>
-                <label
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-gray-500)', textTransform: 'uppercase' }}>
+                    Proficiency
+                  </span>
+                  <Badge
+                    variant={
+                      us.proficiency_level === 'advanced'
+                        ? 'mint'
+                        : us.proficiency_level === 'intermediate'
+                        ? 'primary'
+                        : 'neutral'
+                    }
+                    size="sm"
+                    hasDot
+                  >
+                    {us.proficiency_level}
+                  </Badge>
+                </div>
+
+                {/* 3-level segmented button selector */}
+                <div
                   style={{
-                    fontSize: 'var(--font-size-xs)',
-                    color: 'var(--color-gray-500)',
-                    display: 'block',
-                    marginBottom: 'var(--space-1)',
-                    textTransform: 'uppercase',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '4px',
+                    backgroundColor: 'var(--color-gray-100)',
+                    padding: '3px',
+                    borderRadius: 'var(--radius-md)',
                   }}
                 >
-                  Proficiency Level
-                </label>
-                <select
-                  value={us.proficiency_level}
-                  onChange={(e) => handleLevelChange(us.user_skill_id, e.target.value as ProficiencyEnum)}
-                  style={{
-                    width: '100%',
-                    padding: 'var(--space-2)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-gray-300)',
-                    backgroundColor: 'var(--color-gray-50)',
-                    fontSize: 'var(--font-size-sm)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
+                  {(['beginner', 'intermediate', 'advanced'] as ProficiencyEnum[]).map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => handleLevelChange(us.skill_id, lvl)}
+                      style={{
+                        padding: '5px 2px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textTransform: 'capitalize',
+                        backgroundColor: us.proficiency_level === lvl ? 'var(--color-white)' : 'transparent',
+                        color: us.proficiency_level === lvl ? 'var(--color-primary-700)' : 'var(--color-gray-600)',
+                        boxShadow: us.proficiency_level === lvl ? 'var(--shadow-xs)' : 'none',
+                        transition: 'all var(--transition-fast)',
+                      }}
+                    >
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
               </div>
             </Card>
           ))}

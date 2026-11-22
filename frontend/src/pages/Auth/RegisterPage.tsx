@@ -2,10 +2,23 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { RoleEnum } from '../../types';
+import {
+  User,
+  Mail,
+  Lock,
+  Phone,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  HeartHandshake,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Sparkles,
+} from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -14,6 +27,7 @@ export const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<RoleEnum>('mentee');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
@@ -50,7 +64,7 @@ export const RegisterPage: React.FC = () => {
       });
       navigate('/dashboard');
     } catch {
-      setError('Registration failed. Please try again.');
+      setError('Registration failed. Please try again with valid information.');
     } finally {
       setIsLoading(false);
     }
@@ -58,28 +72,118 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div>
-      <h2 style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-1)' }}>
-        Join WEIS
-      </h2>
-      <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-6)' }}>
-        Create your profile to start assessing skills, learning, or mentoring.
-      </p>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <h2
+          style={{
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: 800,
+            color: 'var(--color-gray-900)',
+            fontFamily: "'Plus Jakarta Sans', var(--font-family)",
+            letterSpacing: '-0.025em',
+            marginBottom: 'var(--space-1)',
+          }}
+        >
+          Create Your Account
+        </h2>
+        <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-sm)' }}>
+          Join the WEIS community for personalized growth, mentorship, and inclusion.
+        </p>
+      </div>
 
       {error && (
         <div
           role="alert"
           style={{
-            padding: 'var(--space-3)',
+            padding: '12px 14px',
             backgroundColor: 'var(--color-error-light)',
             color: 'var(--color-error)',
             borderRadius: 'var(--radius-md)',
             fontSize: 'var(--font-size-sm)',
             marginBottom: 'var(--space-4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: '1px solid #fecaca',
           }}
         >
-          {error}
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
         </div>
       )}
+
+      {/* Role Selection Toggle Cards */}
+      <div style={{ marginBottom: 'var(--space-5)' }}>
+        <label
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: 600,
+            color: 'var(--color-gray-700)',
+            display: 'block',
+            marginBottom: 'var(--space-2)',
+          }}
+        >
+          I am joining as a:
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+          <button
+            type="button"
+            onClick={() => setRole('mentee')}
+            style={{
+              padding: 'var(--space-3)',
+              borderRadius: 'var(--radius-lg)',
+              border: `2px solid ${role === 'mentee' ? 'var(--color-primary-500)' : 'var(--color-gray-200)'}`,
+              backgroundColor: role === 'mentee' ? 'var(--color-primary-50)' : 'var(--color-white)',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              textAlign: 'center',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            <GraduationCap
+              size={22}
+              style={{ color: role === 'mentee' ? 'var(--color-primary-600)' : 'var(--color-gray-400)' }}
+            />
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+              Mentee / Learner
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--color-gray-500)', lineHeight: 1.2 }}>
+              Upskill & find mentors
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRole('mentor')}
+            style={{
+              padding: 'var(--space-3)',
+              borderRadius: 'var(--radius-lg)',
+              border: `2px solid ${role === 'mentor' ? 'var(--color-accent-500)' : 'var(--color-gray-200)'}`,
+              backgroundColor: role === 'mentor' ? 'var(--color-accent-50)' : 'var(--color-white)',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              textAlign: 'center',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
+            <HeartHandshake
+              size={22}
+              style={{ color: role === 'mentor' ? 'var(--color-accent-600)' : 'var(--color-gray-400)' }}
+            />
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+              Industry Mentor
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--color-gray-500)', lineHeight: 1.2 }}>
+              Guide women in tech
+            </span>
+          </button>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input
@@ -87,6 +191,7 @@ export const RegisterPage: React.FC = () => {
           placeholder="e.g. Amina Rao"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          leftIcon={<User size={18} />}
           required
         />
 
@@ -96,88 +201,111 @@ export const RegisterPage: React.FC = () => {
           placeholder="e.g. amina@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          leftIcon={<Mail size={18} />}
           required
         />
 
         <Input
           label="Password *"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="At least 6 characters"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          leftIcon={<Lock size={18} />}
+          rightIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--color-gray-400)',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          }
+          helperText="Minimum 6 characters. Passwords are encrypted with bcrypt."
           required
-        />
-
-        <Select
-          label="I want to join as: *"
-          value={role}
-          onChange={(e) => setRole(e.target.value as RoleEnum)}
-          options={[
-            { value: 'mentee', label: 'Mentee (Looking to upskill and find mentors)' },
-            { value: 'mentor', label: 'Mentor (Experienced leader wanting to guide others)' },
-          ]}
         />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
           <Input
-            label="Phone (Optional)"
-            placeholder="+91..."
+            label="Phone (optional)"
+            type="tel"
+            placeholder="+91 98765 43210"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            leftIcon={<Phone size={16} />}
           />
+
           <Input
-            label="Location (Optional)"
-            placeholder="e.g. Bengaluru, India"
+            label="City / Region"
+            placeholder="e.g. Hyderabad"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
+            leftIcon={<MapPin size={16} />}
           />
         </div>
 
-        {/* Conditional fields if registering as Mentor */}
+        {/* Mentor Specific Onboarding Fields */}
         {role === 'mentor' && (
           <div
             style={{
               padding: 'var(--space-4)',
-              backgroundColor: 'var(--color-primary-50)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-primary-200)',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--color-accent-50)',
+              border: '1px solid var(--color-accent-200)',
               display: 'flex',
               flexDirection: 'column',
               gap: 'var(--space-3)',
             }}
           >
-            <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary-800)' }}>
-              MENTOR PROFILE DETAILS
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={16} style={{ color: 'var(--color-accent-600)' }} />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-accent-700)' }}>
+                Mentor Profile Credentials
+              </span>
+            </div>
+
             <Input
-              label="Area of Expertise *"
-              placeholder="e.g. Data Science & Career Transition"
+              label="Primary Expertise Area *"
+              placeholder="e.g. Full Stack Engineering, AI, Product Leadership"
               value={expertiseArea}
               onChange={(e) => setExpertiseArea(e.target.value)}
-              required
+              leftIcon={<Briefcase size={16} />}
+              required={role === 'mentor'}
             />
+
             <Textarea
-              label="Short Bio / Professional Background *"
-              placeholder="Briefly describe your experience and mentoring philosophy..."
-              rows={3}
+              label="Professional Bio & Mentorship Philosophy"
+              placeholder="Describe your background and how you aim to support mentees..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              required
+              rows={3}
             />
-            <p style={{ fontSize: '11px', color: 'var(--color-gray-600)' }}>
-              Note: Mentor profiles undergo a quick verification review by our team before public listing.
-            </p>
           </div>
         )}
 
-        <Button type="submit" variant="primary" isLoading={isLoading} style={{ width: '100%', marginTop: 'var(--space-2)' }}>
-          Create Account
+        <Button
+          type="submit"
+          variant="gradient"
+          size="lg"
+          isLoading={isLoading}
+          style={{ width: '100%', marginTop: 'var(--space-2)' }}
+        >
+          Complete Registration →
         </Button>
       </form>
 
-      <div style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)' }}>
-        Already have an account?{' '}
-        <Link to="/login" style={{ fontWeight: 'bold' }}>
+      <div style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--font-size-sm)' }}>
+        <span style={{ color: 'var(--color-gray-500)' }}>Already have an account? </span>
+        <Link to="/login" style={{ fontWeight: 700, color: 'var(--color-primary-600)' }}>
           Sign In
         </Link>
       </div>

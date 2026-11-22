@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { assessmentsApi, CreateAssessmentPayload } from '../../api/assessments';
@@ -11,6 +11,12 @@ import { Select } from '../../components/ui/Select';
 import { ProgressRing } from '../../components/ui/ProgressRing';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
+import {
+  Zap,
+  BookOpen,
+  History,
+  Sliders,
+} from 'lucide-react';
 
 const PRESET_ROLES = [
   'Junior Data Analyst',
@@ -35,26 +41,27 @@ export const AssessmentPage: React.FC = () => {
   const [activeResult, setActiveResult] = useState<SkillGapAssessment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
+  const initData = useCallback(async () => {
     if (!user) return;
-    const init = async () => {
-      setIsLoading(true);
-      try {
-        const [aList, sList] = await Promise.all([
-          assessmentsApi.getAssessments(user.user_id),
-          skillsApi.getAllSkills(),
-        ]);
-        setAssessments(aList);
-        setSkills(sList);
-        if (aList.length > 0) {
-          setActiveResult(aList[0]);
-        }
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const [aList, sList] = await Promise.all([
+        assessmentsApi.getAssessments(user.user_id),
+        skillsApi.getAllSkills(),
+      ]);
+      setAssessments(aList);
+      setSkills(sList);
+      if (aList.length > 0) {
+        setActiveResult(aList[0]);
       }
-    };
-    init();
+    } finally {
+      setIsLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    initData();
+  }, [initData]);
 
   const startNewAssessment = () => {
     // Populate default 4 skills for the selected target role
@@ -72,8 +79,8 @@ export const AssessmentPage: React.FC = () => {
     field: 'required_level' | 'current_level',
     val: ProficiencyEnum
   ) => {
-    setSkillRatings(
-      skillRatings.map((sr) => (sr.skill_id === skillId ? { ...sr, [field]: val } : sr))
+    setSkillRatings((prev) =>
+      prev.map((sr) => (sr.skill_id === skillId ? { ...sr, [field]: val } : sr))
     );
   };
 
@@ -88,7 +95,7 @@ export const AssessmentPage: React.FC = () => {
         skill_ratings: skillRatings,
       };
       const result = await assessmentsApi.createAssessment(payload);
-      setAssessments([result, ...assessments]);
+      setAssessments((prev) => [result, ...prev]);
       setActiveResult(result);
       setMode('results');
     } finally {
@@ -98,8 +105,8 @@ export const AssessmentPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-16)' }}>
-        <Spinner size="lg" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Spinner size="lg" color="var(--color-primary-500)" />
       </div>
     );
   }
@@ -107,12 +114,12 @@ export const AssessmentPage: React.FC = () => {
   return (
     <div>
       <PageTitle
-        title="Skill-Gap Assessment"
-        description="Benchmark your current capabilities against specific target roles. Discover required proficiencies and prioritized learning paths."
+        title="Skill-Gap Assessment Laboratory"
+        description="Benchmark your current capabilities against industry standards. Pinpoint exact competency deficits and discover customized learning roadmaps."
         action={
           mode !== 'creating' ? (
-            <Button variant="primary" onClick={startNewAssessment}>
-              ⚡ Take New Assessment
+            <Button variant="gradient" onClick={startNewAssessment}>
+              <Zap size={16} /> Run New Assessment
             </Button>
           ) : (
             <Button variant="ghost" onClick={() => setMode('history')}>
@@ -124,10 +131,13 @@ export const AssessmentPage: React.FC = () => {
 
       {/* CREATE ASSESSMENT WORKFLOW */}
       {mode === 'creating' && (
-        <Card padding="lg" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-2)' }}>
-            Configure Role Assessment
-          </h2>
+        <Card padding="lg" variant="glass" style={{ maxWidth: '840px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-2)' }}>
+            <Sliders size={20} style={{ color: 'var(--color-primary-500)' }} />
+            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-gray-900)' }}>
+              Configure Role Assessment Matrix
+            </h2>
+          </div>
           <p style={{ color: 'var(--color-gray-500)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-6)' }}>
             Select your desired target position and benchmark your proficiency for each required competency.
           </p>
@@ -141,10 +151,16 @@ export const AssessmentPage: React.FC = () => {
             />
 
             <div>
-              <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 'bold', color: 'var(--color-gray-800)', marginBottom: 'var(--space-3)' }}>
-                Required Competencies Evaluation
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-gray-800)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Required Competencies Evaluation
+                </h3>
+                <span style={{ fontSize: '11px', color: 'var(--color-gray-500)' }}>
+                  {skillRatings.length} Skills Evaluated
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {skillRatings.map((sr) => {
                   const sObj = skills.find((s) => s.skill_id === sr.skill_id);
                   return (
@@ -152,9 +168,10 @@ export const AssessmentPage: React.FC = () => {
                       key={sr.skill_id}
                       style={{
                         padding: 'var(--space-4)',
-                        backgroundColor: 'var(--color-gray-50)',
-                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: 'var(--color-white)',
+                        borderRadius: 'var(--radius-lg)',
                         border: '1px solid var(--color-gray-200)',
+                        boxShadow: 'var(--shadow-xs)',
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                         gap: 'var(--space-4)',
@@ -162,11 +179,11 @@ export const AssessmentPage: React.FC = () => {
                       }}
                     >
                       <div>
-                        <span style={{ fontWeight: '600', color: 'var(--color-gray-900)' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--color-gray-900)', fontSize: '14px' }}>
                           {sObj?.skill_name}
                         </span>
-                        <span style={{ display: 'block', fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
-                          {sObj?.category}
+                        <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-gray-500)', marginTop: '2px' }}>
+                          Category: {sObj?.category || 'Technical'}
                         </span>
                       </div>
 
@@ -201,11 +218,11 @@ export const AssessmentPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)', borderTop: '1px solid var(--color-gray-200)', paddingTop: 'var(--space-4)' }}>
               <Button type="button" variant="ghost" onClick={() => setMode('history')}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" isLoading={isSubmitting}>
+              <Button type="submit" variant="gradient" size="lg" isLoading={isSubmitting}>
                 Calculate Readiness & Identify Gaps →
               </Button>
             </div>
@@ -216,41 +233,52 @@ export const AssessmentPage: React.FC = () => {
       {/* RESULTS & HISTORY VIEW */}
       {mode !== 'creating' && activeResult && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-          {/* Top Score Banner */}
-          <Card padding="lg">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: 'var(--space-6)' }}>
+          {/* Top Score Bento Card */}
+          <Card padding="lg" variant="glass">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: 'var(--space-8)' }}>
               <ProgressRing
                 score={activeResult.overall_score || 0}
-                size={160}
-                label={`${activeResult.overall_score || 0}% Match`}
+                size={180}
+                strokeWidth={14}
                 sublabel={activeResult.target_role}
               />
 
-              <div style={{ maxWidth: '460px' }}>
-                <Badge variant="primary" size="md">
+              <div style={{ maxWidth: '480px' }}>
+                <Badge variant="primary" size="sm" hasDot style={{ marginBottom: '8px' }}>
                   Assessment Report
                 </Badge>
-                <h2 style={{ fontSize: 'var(--font-size-2xl)', color: 'var(--color-gray-900)', marginTop: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                  Readiness for {activeResult.target_role}
+                <h2 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--color-gray-900)', marginBottom: 'var(--space-2)', letterSpacing: '-0.02em' }}>
+                  Readiness: {activeResult.target_role}
                 </h2>
-                <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6, marginBottom: 'var(--space-6)' }}>
                   Evaluated on {new Date(activeResult.assessed_at || '').toLocaleDateString()}.
-                  We have mapped your identified competency gaps directly to tailored learning courses.
+                  Your score reflects an objective comparison of current proficiency versus requirements. We have prioritized targeted learning pathways below to bridge these gaps.
                 </p>
                 <Link to="/recommendations">
-                  <Button variant="primary">
-                    🎓 View Recommended Courses for These Gaps →
+                  <Button variant="gradient" size="md">
+                    <BookOpen size={16} /> View Recommended Courses for These Gaps →
                   </Button>
                 </Link>
               </div>
             </div>
           </Card>
 
-          {/* Detailed Skill Gap Breakdown (Sorted by largest gap first, per UI/UX doc) */}
+          {/* Detailed Skill Gap Breakdown */}
           <div>
-            <h3 style={{ fontSize: 'var(--font-size-xl)', color: 'var(--color-gray-900)', marginBottom: 'var(--space-4)' }}>
-              Detailed Gap Analysis by Skill
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+              <div>
+                <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-gray-900)' }}>
+                  Competency Gap Breakdown
+                </h3>
+                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
+                  Sorted with the largest skill deficits first to optimize your learning schedule
+                </p>
+              </div>
+              <Badge variant="neutral" size="sm">
+                {activeResult.gap_details?.length || 0} Competencies Scored
+              </Badge>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               {activeResult.gap_details
                 ?.slice()
@@ -258,37 +286,49 @@ export const AssessmentPage: React.FC = () => {
                 .map((gd) => {
                   const hasGap = (gd.gap_score || 0) > 0;
                   return (
-                    <Card key={gd.gap_detail_id} padding="md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <span style={{ fontWeight: '600', color: 'var(--color-gray-900)', fontSize: 'var(--font-size-base)' }}>
-                            {gd.skill?.skill_name || 'Skill Competency'}
-                          </span>
-                          <Badge variant={hasGap ? 'warning' : 'success'} size="sm">
-                            {hasGap ? 'Gap Identified' : 'Meets Target'}
-                          </Badge>
+                    <Card key={gd.gap_detail_id} padding="md" variant="glass" hoverEffect>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--color-gray-900)', fontSize: 'var(--font-size-base)' }}>
+                              {gd.skill?.skill_name || 'Skill Competency'}
+                            </span>
+                            <Badge variant={hasGap ? 'coral' : 'mint'} size="sm" hasDot>
+                              {hasGap ? 'Gap Identified' : 'Meets Target'}
+                            </Badge>
+                          </div>
+                          <div style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
+                            <span>
+                              Current: <strong style={{ color: 'var(--color-gray-800)', textTransform: 'capitalize' }}>{gd.current_level}</strong>
+                            </span>
+                            <span>•</span>
+                            <span>
+                              Required: <strong style={{ color: 'var(--color-primary-700)', textTransform: 'capitalize' }}>{gd.required_level}</strong>
+                            </span>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-600)', marginTop: 'var(--space-1)' }}>
-                          <span>Current Level: <strong>{gd.current_level}</strong></span>
-                          <span>Required: <strong>{gd.required_level}</strong></span>
-                        </div>
-                      </div>
 
-                      {/* Visual 2-point gap bar */}
-                      <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-gray-500)' }}>
-                          <span>Proficiency Gap</span>
-                          <span>{hasGap ? `-${Math.round(gd.gap_score || 0)} pts` : 'Optimized'}</span>
-                        </div>
-                        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-gray-200)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                          <div
-                            style={{
-                              width: `${Math.max(15, 100 - (gd.gap_score || 0))}%`,
-                              height: '100%',
-                              backgroundColor: hasGap ? 'var(--color-warning)' : 'var(--color-success)',
-                              borderRadius: 'var(--radius-full)',
-                            }}
-                          />
+                        {/* Visual Gap Meter */}
+                        <div style={{ minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600, color: 'var(--color-gray-600)' }}>
+                            <span>Proficiency Alignment</span>
+                            <span style={{ color: hasGap ? 'var(--color-coral-600)' : 'var(--color-success)' }}>
+                              {hasGap ? `-${Math.round(gd.gap_score || 0)} pts` : 'Optimized'}
+                            </span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-gray-100)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: `${Math.max(15, 100 - (gd.gap_score || 0))}%`,
+                                height: '100%',
+                                background: hasGap
+                                  ? 'var(--gradient-coral)'
+                                  : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                                borderRadius: 'var(--radius-full)',
+                                transition: 'width 0.8s ease',
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -300,9 +340,12 @@ export const AssessmentPage: React.FC = () => {
           {/* Past Assessment History list */}
           {assessments.length > 1 && (
             <div>
-              <h3 style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-gray-800)', marginBottom: 'var(--space-3)' }}>
-                Assessment History
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-3)' }}>
+                <History size={18} style={{ color: 'var(--color-gray-500)' }} />
+                <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+                  Assessment History Cycles
+                </h3>
+              </div>
               <div style={{ display: 'flex', gap: 'var(--space-3)', overflowX: 'auto', paddingBottom: 'var(--space-2)' }}>
                 {assessments.map((a) => (
                   <button
@@ -310,19 +353,21 @@ export const AssessmentPage: React.FC = () => {
                     onClick={() => setActiveResult(a)}
                     style={{
                       padding: 'var(--space-3) var(--space-4)',
-                      borderRadius: 'var(--radius-md)',
-                      border: `1px solid ${activeResult?.assessment_id === a.assessment_id ? 'var(--color-primary-500)' : 'var(--color-gray-200)'}`,
+                      borderRadius: 'var(--radius-lg)',
+                      border: `1.5px solid ${activeResult?.assessment_id === a.assessment_id ? 'var(--color-primary-500)' : 'var(--color-gray-200)'}`,
                       backgroundColor: activeResult?.assessment_id === a.assessment_id ? 'var(--color-primary-50)' : 'var(--color-white)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       minWidth: '220px',
+                      transition: 'all var(--transition-fast)',
+                      boxShadow: 'var(--shadow-xs)',
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-900)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-900)' }}>
                       {a.target_role}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)' }}>
-                      {a.overall_score}% • {new Date(a.assessed_at || '').toLocaleDateString()}
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-500)', marginTop: '2px' }}>
+                      {a.overall_score}% Match • {new Date(a.assessed_at || '').toLocaleDateString()}
                     </div>
                   </button>
                 ))}

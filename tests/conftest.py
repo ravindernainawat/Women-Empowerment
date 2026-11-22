@@ -3,6 +3,12 @@ Shared test configuration for WEIS backend tests.
 Provides a single in-memory SQLite database and TestClient shared across all test files.
 """
 
+import os
+
+# Ensure tests default to in-memory SQLite and testing environment
+os.environ["ENV"] = "testing"
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool

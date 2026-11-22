@@ -29,11 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('weis_user');
       }
     } else {
-      // Default to Amina (mentee) for seamless exploration if no user is set
-      const defaultUser = MOCK_USERS[0];
-      setUser(defaultUser);
-      localStorage.setItem('weis_user', JSON.stringify(defaultUser));
-      localStorage.setItem('weis_token', 'mock-jwt-token-weis');
+      setUser(null);
     }
     setIsLoading(false);
   }, []);

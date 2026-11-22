@@ -10,7 +10,7 @@ let localUserSkills = [...MOCK_USER_SKILLS];
 export const skillsApi = {
   async getAllSkills(): Promise<Skill[]> {
     try {
-      const res = await apiClient.get<Skill[]>('/skills');
+      const res = await apiClient.get<Skill[]>('/api/skills');
       return res.data;
     } catch {
       return MOCK_SKILLS;
@@ -19,8 +19,26 @@ export const skillsApi = {
 
   async getUserSkills(userId: number): Promise<UserSkill[]> {
     try {
-      const res = await apiClient.get<UserSkill[]>(`/users/${userId}/skills`);
-      return res.data;
+      // Backend uses JWT-authenticated /api/users/me/skills
+      interface BackendUserSkill {
+        user_skill_id: number;
+        skill_id: number;
+        skill_name: string;
+        category?: string | null;
+        proficiency_level: ProficiencyEnum;
+      }
+      const res = await apiClient.get<BackendUserSkill[]>('/api/users/me/skills');
+      return res.data.map((r) => ({
+        user_skill_id: r.user_skill_id,
+        user_id: userId,
+        skill_id: r.skill_id,
+        proficiency_level: r.proficiency_level,
+        skill: {
+          skill_id: r.skill_id,
+          skill_name: r.skill_name,
+          category: r.category,
+        },
+      }));
     } catch {
       return localUserSkills.filter((us) => us.user_id === userId);
     }
@@ -28,11 +46,28 @@ export const skillsApi = {
 
   async addUserSkill(userId: number, skillId: number, level: ProficiencyEnum): Promise<UserSkill> {
     try {
-      const res = await apiClient.post<UserSkill>(`/users/${userId}/skills`, {
+      const res = await apiClient.post<{
+        user_skill_id: number;
+        skill_id: number;
+        skill_name: string;
+        category?: string | null;
+        proficiency_level: ProficiencyEnum;
+      }>('/api/users/me/skills', {
         skill_id: skillId,
         proficiency_level: level,
       });
-      return res.data;
+
+      return {
+        user_skill_id: res.data.user_skill_id,
+        user_id: userId,
+        skill_id: res.data.skill_id,
+        proficiency_level: res.data.proficiency_level,
+        skill: {
+          skill_id: res.data.skill_id,
+          skill_name: res.data.skill_name,
+          category: res.data.category,
+        },
+      };
     } catch {
       const targetSkill = MOCK_SKILLS.find((s) => s.skill_id === skillId) || {
         skill_id: skillId,
@@ -50,14 +85,32 @@ export const skillsApi = {
     }
   },
 
-  async updateUserSkill(userSkillId: number, level: ProficiencyEnum): Promise<UserSkill> {
+  async updateUserSkill(skillId: number, level: ProficiencyEnum): Promise<UserSkill> {
     try {
-      const res = await apiClient.put<UserSkill>(`/user-skills/${userSkillId}`, {
+      // Backend PUT endpoint uses catalogue skill_id in URL
+      const res = await apiClient.put<{
+        user_skill_id: number;
+        skill_id: number;
+        skill_name: string;
+        category?: string | null;
+        proficiency_level: ProficiencyEnum;
+      }>(`/api/users/me/skills/${skillId}`, {
         proficiency_level: level,
       });
-      return res.data;
+
+      return {
+        user_skill_id: res.data.user_skill_id,
+        user_id: 0,
+        skill_id: res.data.skill_id,
+        proficiency_level: res.data.proficiency_level,
+        skill: {
+          skill_id: res.data.skill_id,
+          skill_name: res.data.skill_name,
+          category: res.data.category,
+        },
+      };
     } catch {
-      const idx = localUserSkills.findIndex((us) => us.user_skill_id === userSkillId);
+      const idx = localUserSkills.findIndex((us) => us.skill_id === skillId || us.user_skill_id === skillId);
       if (idx !== -1) {
         localUserSkills[idx] = { ...localUserSkills[idx], proficiency_level: level };
         return localUserSkills[idx];
@@ -66,11 +119,12 @@ export const skillsApi = {
     }
   },
 
-  async deleteUserSkill(userSkillId: number): Promise<void> {
+  async deleteUserSkill(skillId: number): Promise<void> {
     try {
-      await apiClient.delete(`/user-skills/${userSkillId}`);
+      // Backend DELETE uses catalogue skill_id
+      await apiClient.delete(`/api/users/me/skills/${skillId}`);
     } catch {
-      localUserSkills = localUserSkills.filter((us) => us.user_skill_id !== userSkillId);
+      localUserSkills = localUserSkills.filter((us) => us.skill_id !== skillId && us.user_skill_id !== skillId);
     }
   },
 };

@@ -3,131 +3,206 @@ import { useAuth } from '../../context/AuthContext';
 import { PageTitle } from '../../components/common/PageTitle';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
-import { Textarea } from '../../components/ui/Textarea';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  CheckCircle2,
+  Shield,
+  Sparkles,
+  Award,
+  Save,
+} from 'lucide-react';
+
+import { usersApi } from '../../api/users';
 
 export const ProfilePage: React.FC = () => {
   const { user } = useAuth();
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [location, setLocation] = useState(user?.location || '');
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!user) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await usersApi.updateProfile({ phone, location });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3500);
+    } catch {
+      setSaveError('Failed to save profile changes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '780px', margin: '0 auto' }}>
       <PageTitle
-        title="My User Profile"
-        description="Manage your platform identity, contact preferences, and public bio settings."
+        title="Account Profile & Settings"
+        description="Manage your platform identity, contact credentials, and personal inclusion preferences."
       />
 
       {isSaved && (
         <div
           role="status"
           style={{
-            padding: 'var(--space-3) var(--space-4)',
+            padding: '12px 18px',
             backgroundColor: 'var(--color-success-light)',
             color: 'var(--color-success)',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-xl)',
             border: '1px solid #bbf7d0',
-            marginBottom: 'var(--space-4)',
+            marginBottom: 'var(--space-6)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
-          ✓ Profile settings saved successfully!
+          <CheckCircle2 size={18} />
+          <span>Profile settings successfully saved!</span>
         </div>
       )}
 
-      <Card padding="lg">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', paddingBottom: 'var(--space-6)', borderBottom: '1px solid var(--color-gray-200)' }}>
+      {saveError && (
+        <div
+          role="alert"
+          style={{
+            padding: '12px 18px',
+            backgroundColor: 'var(--color-error-light)',
+            color: 'var(--color-error)',
+            borderRadius: 'var(--radius-xl)',
+            border: '1px solid #fecaca',
+            marginBottom: 'var(--space-6)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}
+        >
+          <span>{saveError}</span>
+        </div>
+      )}
+
+      {/* Main Profile Identity Card */}
+      <Card padding="lg" variant="glass" style={{ marginBottom: 'var(--space-6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-5)', marginBottom: 'var(--space-6)', paddingBottom: 'var(--space-6)', borderBottom: '1px solid var(--color-gray-100)' }}>
           <div
             style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-primary-500)',
+              width: '72px',
+              height: '72px',
+              borderRadius: 'var(--radius-full)',
+              background:
+                user.role === 'admin'
+                  ? 'var(--gradient-coral)'
+                  : user.role === 'mentor'
+                  ? 'var(--gradient-accent)'
+                  : 'var(--gradient-primary)',
               color: 'var(--color-white)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 'bold',
+              fontWeight: 800,
               fontSize: 'var(--font-size-2xl)',
+              boxShadow: 'var(--shadow-md)',
+              fontFamily: "'Plus Jakarta Sans', var(--font-family)",
             }}
           >
-            {user.full_name.charAt(0)}
+            {user.full_name
+              .split(' ')
+              .map((n) => n[0])
+              .slice(0, 2)
+              .join('')}
           </div>
+
           <div>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', color: 'var(--color-gray-900)' }}>
-              {user.full_name}
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
-              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-500)' }}>
-                {user.email}
-              </span>
-              <Badge variant={user.role === 'admin' ? 'accent' : 'primary'} size="sm">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-gray-900)' }}>
+                {user.full_name}
+              </h2>
+              <Badge variant={user.role === 'admin' ? 'coral' : user.role === 'mentor' ? 'accent' : 'primary'} size="sm" hasDot>
                 {user.role}
               </Badge>
+            </div>
+            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-500)', marginTop: '2px' }}>
+              {user.email}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--color-gray-400)', marginTop: '4px' }}>
+              <MapPin size={12} /> {location || 'Location not set'}
             </div>
           </div>
         </div>
 
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input
-            label="Full Legal Name"
-            value={user.full_name}
-            disabled
-            helperText="To change your legal name, contact administration."
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+            <Input
+              label="Full Name"
+              value={user.full_name}
+              disabled
+              leftIcon={<User size={16} />}
+              helperText="Verified name registered on account."
+            />
 
-          <Input
-            label="Email Address"
-            value={user.email}
-            disabled
-            helperText="Primary email used for account access."
-          />
+            <Input
+              label="Email Address"
+              value={user.email}
+              disabled
+              leftIcon={<Mail size={16} />}
+              helperText="Primary email used for system communication."
+            />
+          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
             <Input
               label="Contact Phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91..."
+              placeholder="+91 98765 43210"
+              leftIcon={<Phone size={16} />}
+              helperText="Optional phone for mentorship coordination."
             />
+
             <Input
               label="City / Location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Bengaluru, India"
+              placeholder="e.g. Hyderabad, India"
+              leftIcon={<MapPin size={16} />}
+              helperText="Used to recommend localized opportunities."
             />
           </div>
 
-          {user.role === 'mentor' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-              <Input
-                label="Mentorship Focus / Expertise"
-                defaultValue="Data Science & Tech Leadership"
-              />
-              <Textarea
-                label="Public Mentor Bio"
-                rows={4}
-                defaultValue="15+ years experience supporting women returning to tech careers."
-              />
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-4)' }}>
-            <Button type="submit" variant="primary">
-              Save Changes
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-2)' }}>
+            <Button type="submit" variant="primary" size="md" isLoading={isSaving}>
+              <Save size={16} /> Save Profile Updates
             </Button>
           </div>
         </form>
+      </Card>
+
+      {/* Social Impact & SDG Status Card */}
+      <Card padding="md" variant="subtle">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 'var(--space-2)' }}>
+          <Award size={18} style={{ color: 'var(--color-primary-600)' }} />
+          <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-gray-900)' }}>
+            UN Sustainable Goals Alignment
+          </h3>
+        </div>
+        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-gray-600)', lineHeight: 1.6 }}>
+          By engaging in skill benchmarking, mentorship, and safe reporting, your participation directly supports <strong>UN SDG 5 (Gender Equality)</strong> and <strong>UN SDG 8 (Decent Work & Economic Growth)</strong>.
+        </p>
       </Card>
     </div>
   );

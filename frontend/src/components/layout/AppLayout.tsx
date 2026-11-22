@@ -1,25 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 
 export const AppLayout: React.FC = () => {
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-gray-50)' }}>
-      <Navbar />
-      <div style={{ display: 'flex' }}>
-        <Sidebar />
-        <main
-          style={{
-            flex: 1,
-            marginLeft: 'var(--sidebar-width)',
-            marginTop: 'var(--navbar-height)',
-            padding: 'var(--space-8)',
-            minHeight: 'calc(100vh - var(--navbar-height))',
-            maxWidth: '1400px',
-            width: '100%',
-          }}
-        >
+    <div className="app-layout-root">
+      <Navbar
+        onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+      />
+      <div style={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
+        <Sidebar
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+        />
+        <main className="main-content-area">
           <Outlet />
         </main>
       </div>

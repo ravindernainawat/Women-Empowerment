@@ -11,12 +11,13 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import engine, Base, get_db
 
-# Creates tables if they don't exist yet. For anything beyond local dev,
-# switch to Alembic migrations instead of relying on this.
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    print(f"Warning: Could not connect to database to create tables: {e}")
+# Creates tables if they don't exist yet (skipped during automated testing).
+# For anything beyond local dev, switch to Alembic migrations instead of relying on this.
+if settings.ENV != "testing":
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Warning: Could not connect to database to create tables: {e}")
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -47,7 +48,11 @@ def db_health_check(db: Session = Depends(get_db)):
 
 # Routers for users, skills, assessments, recommendations, mentorship,
 # and safety reports get registered here as they're built, e.g.:
-from app.routers import auth, users, skills
+from app.routers import auth, users, skills, assessments, recommendations, mentorship, safety
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(skills.router)
+app.include_router(assessments.router)
+app.include_router(recommendations.router)
+app.include_router(mentorship.router)
+app.include_router(safety.router)
