@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { PageTitle } from '../../components/common/PageTitle';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -51,6 +52,12 @@ export const ProfilePage: React.FC = () => {
       <PageTitle
         title="Account Profile & Settings"
         description="Manage your platform identity, contact credentials, and personal inclusion preferences."
+        action={
+          <VoiceGuidanceButton
+            textToRead="Account Profile and Settings. Manage your platform identity, contact credentials, and personal inclusion preferences aligned with UN Sustainable Development Goals."
+            label="Audio Summary"
+          />
+        }
       />
 
       {isSaved && (

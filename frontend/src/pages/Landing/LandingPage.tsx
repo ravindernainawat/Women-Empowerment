@@ -19,6 +19,9 @@ import {
   Heart,
   TrendingUp,
   Compass,
+  EyeOff,
+  RefreshCw,
+  Volume2,
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -306,6 +309,135 @@ export const LandingPage: React.FC = () => {
               </p>
               <Link to="/safety/report" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-safety-600)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 Safe Reporting <ArrowRight size={14} />
+              </Link>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Innovation Features Section ── */}
+      <section style={{ padding: 'var(--space-20) var(--space-6)', background: 'linear-gradient(180deg, var(--color-warm-bg) 0%, rgba(8,127,140,0.04) 100%)' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-12)' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: 'var(--color-accent-600)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+              <Sparkles size={14} />
+              <span>Unique to WEIS</span>
+            </div>
+            <h2 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 800, color: 'var(--color-gray-900)', letterSpacing: '-0.025em', marginBottom: 'var(--space-3)' }}>
+              5 Innovation Features Built for <span style={{ color: 'var(--color-primary-600)' }}>Real Lives</span>
+            </h2>
+            <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-lg)', maxWidth: '640px', margin: '0 auto', lineHeight: 1.6 }}>
+              Purpose-built for women in constrained environments — from restrictive households to career gaps — these features solve real-world barriers no other platform addresses.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-5)' }}>
+
+            {/* Feature 1 — Quick Mask */}
+            <Card hoverEffect padding="lg" variant="glass" style={{ border: '1px solid rgba(239,68,68,0.15)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', backgroundColor: '#fff1f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <EyeOff size={22} />
+                </div>
+                <div>
+                  <Badge variant="coral" size="sm">Safety Mode</Badge>
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginTop: '4px' }}>
+                    Quick-Mask Emergency Disguise
+                  </h3>
+                </div>
+              </div>
+              <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                Press <kbd style={{ background: 'var(--color-gray-100)', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>Esc×2</kbd> to instantly disguise the entire platform as harmless JavaScript study notes — protecting you from onlookers in under 50ms.
+              </p>
+            </Card>
+
+            {/* Feature 2 — Break-to-Career */}
+            <Card hoverEffect padding="lg" variant="glass" style={{ border: '1px solid rgba(8,127,140,0.15)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-primary-50)', color: 'var(--color-primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <RefreshCw size={22} />
+                </div>
+                <div>
+                  <Badge variant="primary" size="sm">Returnee Runway</Badge>
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginTop: '4px' }}>
+                    Break-to-Career Transformer
+                  </h3>
+                </div>
+              </div>
+              <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                Your career pause is not a gap — it's experience. Select your background (caretaking, micro-business, NGO) and see how it maps at 80–96% alignment to in-demand corporate competencies.
+              </p>
+            </Card>
+
+            {/* Feature 3 — Sisterhood Pods */}
+            <Card hoverEffect padding="lg" variant="glass" style={{ border: '1px solid rgba(167,139,250,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-accent-50)', color: 'var(--color-accent-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Users size={22} />
+                </div>
+                <div>
+                  <Badge variant="accent" size="sm">Peer Support</Badge>
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginTop: '4px' }}>
+                    Sisterhood Learning Pods
+                  </h3>
+                </div>
+              </div>
+              <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                Learn together, not alone. Join a micro-pod of 4–5 women on the same skill path with bi-weekly 15-minute Flash AMA sessions hosted by an expert mentor.
+              </p>
+            </Card>
+
+            {/* Feature 4 — Opportunity Radar */}
+            <Card hoverEffect padding="lg" variant="glass" style={{ border: '1px solid rgba(8,127,140,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-primary-50)', color: 'var(--color-primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <TrendingUp size={22} />
+                </div>
+                <div>
+                  <Badge variant="primary" size="sm">Real-Time Radar</Badge>
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginTop: '4px' }}>
+                    Live Opportunity Radar
+                  </h3>
+                </div>
+              </div>
+              <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                See exactly which inclusive-employer jobs you can apply for <em>today</em> vs. which unlock as your readiness score grows. Equal-pay certified, returnee-friendly companies only.
+              </p>
+            </Card>
+
+            {/* Feature 5 — Voice Guidance */}
+            <Card hoverEffect padding="lg" variant="glass" style={{ border: '1px solid rgba(16,185,129,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-lg)', backgroundColor: '#f0fdf4', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Volume2 size={22} />
+                </div>
+                <div>
+                  <Badge variant="mint" size="sm">Accessibility</Badge>
+                  <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--color-gray-900)', marginTop: '4px' }}>
+                    Vernacular Voice Guidance
+                  </h3>
+                </div>
+              </div>
+              <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                Every major page has an audio read-aloud button powered by the browser's Web Speech API. No external service, works offline. Breaking barriers for women with lower literacy levels.
+              </p>
+            </Card>
+
+            {/* CTA tile */}
+            <Card padding="lg" variant="glass" style={{ background: 'linear-gradient(135deg, rgba(8,127,140,0.08) 0%, rgba(167,139,250,0.1) 100%)', border: '1px solid rgba(8,127,140,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: 'var(--space-4)' }}>
+              <Sparkles size={32} style={{ color: 'var(--color-accent-500)' }} />
+              <div>
+                <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--color-gray-900)', marginBottom: '8px' }}>
+                  Experience All 5 Features
+                </div>
+                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-gray-600)', lineHeight: 1.5, marginBottom: 'var(--space-5)' }}>
+                  Free to join. No credit card. No tracking. Just your career, elevated.
+                </p>
+              </div>
+              <Link to="/register">
+                <Button variant="gradient" size="md">
+                  Start Free Today <ArrowRight size={16} />
+                </Button>
               </Link>
             </Card>
           </div>

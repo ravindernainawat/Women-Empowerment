@@ -12,6 +12,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
+import { VoiceGuidanceButton } from '../../components/common/VoiceGuidanceButton';
 import {
   Target,
   Plus,
@@ -105,7 +106,11 @@ export const SkillInventoryPage: React.FC = () => {
         title="My Skill Inventory"
         description="Maintain a verified catalog of your competencies and proficiencies to power personalized readiness gap analysis."
         action={
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+            <VoiceGuidanceButton
+              textToRead="Skill Inventory. Track and maintain a verified catalog of your technical and professional skills. Log your proficiencies to power personalized readiness gap analysis and unlock targeted job recommendations."
+              label="Audio Tour"
+            />
             <Button variant="primary" onClick={() => setIsModalOpen(true)}>
               <Plus size={16} /> Log New Skill
             </Button>
