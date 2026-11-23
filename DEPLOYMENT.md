@@ -1,4 +1,4 @@
-﻿# WEIS Deployment Runbook & Cloud Guide
+# WEIS Deployment Runbook & Cloud Guide
 
 This guide details how to deploy the **Women Empowerment & Inclusion System (WEIS)** to production across popular cloud providers.
 
