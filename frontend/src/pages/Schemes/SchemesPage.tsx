@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Search, ExternalLink, IndianRupee, CheckCircle, Info, Sparkles } from 'lucide-react';
-const API = axios.create({ baseURL: 'http://localhost:8000' });
+import { apiClient } from '../../api/client';
 
 interface Scheme {
   scheme_id: string;
@@ -33,8 +32,7 @@ export const SchemesPage: React.FC = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const token = localStorage.getItem('weis_token');
-        const { data } = await API.get('/api/schemes', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const { data } = await apiClient.get('/api/schemes');
         setSchemes(data.schemes || []);
         setFiltered(data.schemes || []);
       } catch {

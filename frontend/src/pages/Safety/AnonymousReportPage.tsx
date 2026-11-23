@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { ShieldCheck, Eye, Copy, CheckCircle, Search, AlertTriangle, Lock } from 'lucide-react';
-
-const API = axios.create({ baseURL: 'http://localhost:8000' });
+import { apiClient } from '../../api/client';
 
 type Tab = 'submit' | 'track';
 
@@ -28,7 +26,7 @@ export const AnonymousReportPage: React.FC = () => {
     setSubmitError('');
     setSubmitting(true);
     try {
-      const { data } = await API.post('/api/safety-reports/anonymous', { incident_type: incidentType, description });
+      const { data } = await apiClient.post('/api/safety-reports/anonymous', { incident_type: incidentType, description });
       setSubmitResult(data);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Submission failed. Please try again.';
@@ -43,7 +41,7 @@ export const AnonymousReportPage: React.FC = () => {
     setTrackError('');
     setTracking(true);
     try {
-      const { data } = await API.get(`/api/safety-reports/track/${trackToken.trim()}`);
+      const { data } = await apiClient.get(`/api/safety-reports/track/${trackToken.trim()}`);
       setTrackResult(data);
     } catch {
       setTrackError('Tracking token not found. Please check and try again.');

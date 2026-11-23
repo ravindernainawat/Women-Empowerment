@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Sparkles, CheckCircle, AlertTriangle, Clipboard, ChevronRight } from 'lucide-react';
-const API = axios.create({ baseURL: 'http://localhost:8000' });
+import { apiClient } from '../../api/client';
 
 interface ExtractResult {
   matched_skills: Record<string, string[]>;
@@ -37,8 +36,7 @@ export const SkillExtractorPage: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const token = localStorage.getItem('weis_token');
-      const { data } = await API.post('/api/skills/extract', { text }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const { data } = await apiClient.post('/api/skills/extract', { text });
       setResult(data);
     } catch {
       setError('Could not process text. Please try again.');
