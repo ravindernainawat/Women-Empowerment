@@ -19,13 +19,13 @@ This guide details how to deploy the **Women Empowerment & Inclusion System (WEI
 1. Log in to [Vercel](https://vercel.com) and click **Add New Project**.
 2. Import your GitHub repository: `ravindernainawat/Women-Empowerment`.
 3. In **Build & Development Settings**:
-   - Framework Preset: **Vite**
-   - Root Directory: `frontend`
+   - **Root Directory**: Click **Edit** and select or type `frontend` (⚠️ Essential: Do not leave as `./` because the React/Vite app is located inside the `frontend` directory).
+   - Framework Preset: **Vite** (Vercel auto-detects this once Root Directory is set to `frontend`)
    - Build Command: `npm run build`
    - Output Directory: `dist`
 4. In **Environment Variables**:
    - `VITE_API_BASE_URL`: Set to your deployed backend URL (e.g., `https://weis-api.onrender.com`).
-5. Click **Deploy**. Vercel will automatically read `vercel.json` and `_redirects` to enable smooth client-side routing.
+5. Click **Deploy**. Vercel will automatically read `frontend/vercel.json` and `_redirects` to enable smooth client-side routing.
 
 ### 2. Deploy Backend on Render / Railway
 1. Create a **Web Service** pointing to the GitHub repo.
