@@ -13,32 +13,53 @@ This guide details how to deploy the **Women Empowerment & Inclusion System (WEI
 
 ---
 
-## Strategy A: 1-Click Cloud (Recommended)
+## Strategy A: 1-Click Free Hosting (Recommended)
 
-### 1. Deploy Frontend on Vercel
-1. Log in to [Vercel](https://vercel.com) and click **Add New Project**.
-2. Import your GitHub repository: `ravindernainawat/Women-Empowerment`.
-3. In **Build & Development Settings**:
-   - **Root Directory**: Click **Edit** and select or type `frontend` (⚠️ Essential: Do not leave as `./` because the React/Vite app is located inside the `frontend` directory).
-   - Framework Preset: **Vite** (Vercel auto-detects this once Root Directory is set to `frontend`)
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-4. In **Environment Variables**:
-   - `VITE_API_BASE_URL`: Set to your deployed backend URL (e.g., `https://weis-api.onrender.com`).
-5. Click **Deploy**. Vercel will automatically read `frontend/vercel.json` and `_redirects` to enable smooth client-side routing.
+### 1. Option 1: Deploy Frontend on Netlify (100% Free, Auto-configured)
+Netlify is the easiest free alternative. Because this repository includes `netlify.toml` at the root, Netlify requires **zero configuration**:
+1. Log in to [Netlify](https://app.netlify.com/) (Sign up with GitHub).
+2. Click **Add new site** -> **Import an existing project**.
+3. Select **GitHub** and authorize access to `ravindernainawat/Women-Empowerment`.
+4. Netlify will automatically detect:
+   - Base directory: `frontend`
+   - Build command: `npm run build`
+   - Publish directory: `frontend/dist`
+5. (Optional) Under **Environment variables**, add:
+   - `VITE_API_BASE_URL`: Your backend URL (e.g., `https://weis-backend.onrender.com`).
+6. Click **Deploy Women-Empowerment**. Within 60 seconds your site is live with free HTTPS at `https://<your-site-name>.netlify.app`!
 
-### 2. Deploy Backend on Render / Railway
-1. Create a **Web Service** pointing to the GitHub repo.
-2. Build Settings:
-   - Environment: **Python 3** (or Docker)
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Add Environment Variables:
-   - `DATABASE_URL`: Your managed MySQL connection string.
-   - `SECRET_KEY`: A 64-char hex string generated with `python -c "import secrets; print(secrets.token_hex(32))"`.
-   - `CORS_ORIGINS`: Comma-separated URL of your Vercel frontend (e.g., `https://your-app.vercel.app`).
+---
+
+### 2. Option 2: Deploy Frontend on Vercel
+If you prefer Vercel (or want to use your current Vercel project):
+1. In your Vercel Project Dashboard (`women-empowerment`):
+2. Go to **Settings** -> **General**:
+   - Scroll down to **Root Directory**.
+   - Click **Edit**, enter `frontend`, and click **Save**.
+3. Go to **Deployments** on the left sidebar:
+   - Click **Redeploy** on the latest commit (or push a new commit to `main`).
+4. In **Settings** -> **Environment Variables**:
+   - Add `VITE_API_BASE_URL`: Your backend API URL.
+5. Your production deployment will go live at `https://women-empowerment.vercel.app`.
+
+---
+
+### 3. Deploy Backend API on Render (100% Free Web Service)
+Render offers a free tier for FastAPI/Python applications:
+1. Log in to [Render](https://render.com/) with GitHub.
+2. Click **New +** -> **Web Service**.
+3. Connect your repository: `ravindernainawat/Women-Empowerment`.
+4. Render will read `render.yaml` or you can verify:
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type**: `Free`
+5. Add Environment Variables:
+   - `DATABASE_URL`: `sqlite:///./data/weis.db` (for quick testing) or a free managed PostgreSQL/MySQL database URL from [Neon](https://neon.tech) / [Aiven](https://aiven.io).
+   - `SECRET_KEY`: Generate a 64-character secret key.
+   - `CORS_ORIGINS`: Comma-separated list of your frontend URLs (e.g., `https://weis-women-empowerment.netlify.app,https://women-empowerment.vercel.app`).
    - `ENV`: `production`
-   - `DEBUG`: `False`
+6. Click **Create Web Service**. Render gives you a free live URL: `https://weis-backend.onrender.com`.
 
 ---
 
