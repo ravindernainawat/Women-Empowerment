@@ -11,8 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # --- Database ---------------------------------------------------
-    # Format: mysql+pymysql://<user>:<password>@<host>:<port>/<db_name>
-    DATABASE_URL: str = "mysql+pymysql://weis_user:changeme@localhost:3306/weis_db"
+    # Defaults to zero-config SQLite; override via DATABASE_URL for MySQL or PostgreSQL
+    DATABASE_URL: str = "sqlite:///./weis.db"
 
     # --- App ----------------------------------------------------------
     APP_NAME: str = "WEIS API"

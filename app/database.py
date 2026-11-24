@@ -3,6 +3,7 @@ SQLAlchemy engine + session management for WEIS backend.
 Supports both MySQL (production/staging) and SQLite (local development/testing).
 """
 
+import os
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -10,6 +11,13 @@ from app.config import settings
 
 # Configure engine based on dialect
 if settings.DATABASE_URL.startswith("sqlite"):
+    # Ensure directory exists for SQLite files (e.g. ./data/weis.db)
+    if ":///" in settings.DATABASE_URL and not settings.DATABASE_URL.endswith(":memory:"):
+        db_path = settings.DATABASE_URL.split(":///", 1)[1]
+        dir_name = os.path.dirname(db_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+
     engine = create_engine(
         settings.DATABASE_URL,
         connect_args={"check_same_thread": False},
