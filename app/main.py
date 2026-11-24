@@ -8,16 +8,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+import app.models  # Ensures all SQLAlchemy models are registered with Base.metadata
 from app.config import settings
-from app.database import engine, Base, get_db
+from app.database import engine, Base, SessionLocal, get_db
 
 # Creates tables if they don't exist yet (skipped during automated testing).
-# For anything beyond local dev, switch to Alembic migrations instead of relying on this.
 if settings.ENV != "testing":
     try:
         Base.metadata.create_all(bind=engine)
+        # Automatically seed demo users, skills, and courses if fresh database
+        db_init = SessionLocal()
+        try:
+            if db_init.query(app.models.User).count() == 0:
+                from seed_db import seed_database
+                seed_database(db_init)
+        finally:
+            db_init.close()
     except Exception as e:
-        print(f"Warning: Could not connect to database to create tables: {e}")
+        print(f"Warning: Database initialization error: {e}")
 
 app = FastAPI(
     title=settings.APP_NAME,
