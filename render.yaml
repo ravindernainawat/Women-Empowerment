@@ -7,5 +7,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: ENVIRONMENT
+      - key: ENV
         value: production
+      - key: DATABASE_URL
+        value: sqlite:///./weis.db
+      - key: CORS_ORIGINS
+        value: "*"

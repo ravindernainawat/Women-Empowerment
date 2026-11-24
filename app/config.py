@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # --- CORS -------------------------------------------------------
-    CORS_ORIGINS: list[str] = [
+    CORS_ORIGINS: Union[list[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -39,10 +39,12 @@ class Settings(BaseSettings):
             v_stripped = v.strip()
             if v_stripped.startswith("[") and v_stripped.endswith("]"):
                 try:
-                    return json.loads(v_stripped)
+                    parsed = json.loads(v_stripped)
+                    if isinstance(parsed, list):
+                        return parsed
                 except Exception:
                     pass
-            return [i.strip() for i in v.split(",") if i.strip()]
+            return [i.strip() for i in v_stripped.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
         return []
