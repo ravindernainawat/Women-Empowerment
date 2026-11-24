@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 from fastapi import APIRouter, Query
 
 router = APIRouter(prefix="/api/resources", tags=["Sanctuary & Helplines"])

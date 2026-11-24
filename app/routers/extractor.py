@@ -1,4 +1,4 @@
-﻿import re
+import re
 from typing import List, Dict, Any
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
